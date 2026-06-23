@@ -1,60 +1,32 @@
+import { KairosButton } from "@/components/ui/KairosButton";
+import { KairosLogo } from "@/components/ui/KairosLogo";
+import { KairosText } from "@/components/ui/KairosText";
+import { colors } from "@/styles/theme";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import { router } from "expo-router";
 
 export default function IndexScreen() {
   return (
     <LinearGradient
-      colors={["#05050A", "#0E1018", "#05050A"]}
+      colors={[colors.background, colors.backgroundSoft, colors.background]}
       style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}
     >
-      <StatusBar style="light" />
+      <KairosLogo size="lg" />
 
-      <Text style={{ color: "#D6A84F", fontSize: 42, fontWeight: "800", letterSpacing: 6 }}>
-        KAIROS
-      </Text>
-
-      <Text
-        style={{
-          color: "#F5F7FA",
-          fontSize: 28,
-          fontWeight: "700",
-          marginTop: 24,
-          textAlign: "center",
-        }}
-      >
+      <KairosText variant="title" style={{ marginTop: 24, textAlign: "center" }}>
         O tempo certo para evoluir.
-      </Text>
+      </KairosText>
 
-      <Text
-        style={{
-          color: "#A6A8B3",
-          fontSize: 16,
-          lineHeight: 24,
-          marginTop: 12,
-          textAlign: "center",
-        }}
-      >
+      <KairosText variant="subtitle" style={{ marginTop: 12, textAlign: "center" }}>
         Seu sistema inteligente de alimentação, treino, sono e evolução com IA.
-      </Text>
+      </KairosText>
 
-      <Link
-        href="/(auth)/welcome"
-        style={{
-          marginTop: 40,
-          backgroundColor: "#D6A84F",
-          color: "#05050A",
-          fontSize: 16,
-          fontWeight: "700",
-          paddingVertical: 16,
-          paddingHorizontal: 28,
-          borderRadius: 999,
-          overflow: "hidden",
-        }}
+      <KairosButton
+        style={{ marginTop: 40, alignSelf: "stretch" }}
+        onPress={() => router.push("/(auth)/welcome")}
       >
         Começar agora
-      </Link>
+      </KairosButton>
     </LinearGradient>
   );
 }

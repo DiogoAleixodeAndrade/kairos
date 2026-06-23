@@ -1,76 +1,77 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, Text, View } from "react-native";
+import { KairosStatCard } from "@/components/cards/KairosStatCard";
+import { KairosHeader } from "@/components/layout/KairosHeader";
+import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosCard } from "@/components/ui/KairosCard";
+import { KairosText } from "@/components/ui/KairosText";
+import { useOnboardingStore } from "@/stores/onboarding.store";
+import { colors } from "@/styles/theme";
+import { View } from "react-native";
 
 export default function ProgressScreen() {
+  const onboarding = useOnboardingStore();
+
+  const currentWeight = Number(onboarding.currentWeightKg || 145);
+  const startWeight =
+    onboarding.journeyMode === "with_history"
+      ? Number(onboarding.journeyStartWeightKg || 185)
+      : currentWeight;
+
+  const targetWeight = Number(onboarding.targetWeightKg || 120);
+  const lostWeight = startWeight > currentWeight ? startWeight - currentWeight : 0;
+  const totalGoal = startWeight > targetWeight ? startWeight - targetWeight : 0;
+  const progress = totalGoal > 0 ? Math.min(100, Math.round((lostWeight / totalGoal) * 100)) : 0;
+
   return (
-    <LinearGradient colors={["#05050A", "#0B0D14", "#05050A"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 70, paddingBottom: 120 }}>
-        <Text style={{ color: "#D6A84F", fontSize: 20, fontWeight: "800", letterSpacing: 5 }}>
-          KAIROS
-        </Text>
+    <KairosScreen>
+      <KairosHeader title="Progresso" subtitle="Cada escolha te move para frente." />
 
-        <Text style={{ color: "#F5F7FA", fontSize: 42, fontWeight: "800", marginTop: 32 }}>
-          Progresso
-        </Text>
+      <KairosCard variant="gold" style={{ marginTop: 28, alignItems: "center" }}>
+        <KairosText variant="label" color={colors.gold}>
+          Peso atual
+        </KairosText>
 
-        <Text style={{ color: "#A6A8B3", fontSize: 16, marginTop: 8 }}>
-          Cada escolha te move para frente.
-        </Text>
+        <KairosText variant="metric" style={{ fontSize: 52, marginTop: 12 }}>
+          {currentWeight.toFixed(1)} kg
+        </KairosText>
 
-        <View
-          style={{
-            marginTop: 28,
-            backgroundColor: "#11131D",
-            borderRadius: 26,
-            borderWidth: 1,
-            borderColor: "rgba(214,168,79,0.28)",
-            padding: 22,
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#A6A8B3", fontSize: 13, fontWeight: "800", letterSpacing: 2 }}>
-            PESO ATUAL
-          </Text>
+        <KairosText variant="body" color={colors.gold} style={{ marginTop: 8 }}>
+          {progress}% até a meta
+        </KairosText>
+      </KairosCard>
 
-          <Text style={{ color: "#F5F7FA", fontSize: 52, fontWeight: "800", marginTop: 12 }}>
-            74.3 kg
-          </Text>
+      {onboarding.journeyMode === "with_history" ? (
+        <KairosCard variant="purple" style={{ marginTop: 14 }}>
+          <KairosText variant="label" color={colors.purple}>
+            Histórico da jornada
+          </KairosText>
 
-          <Text style={{ color: "#D6A84F", fontSize: 16, marginTop: 8 }}>72% até a meta</Text>
-        </View>
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            -{lostWeight.toFixed(1)} kg
+          </KairosText>
 
-        <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "#11131D",
-              borderRadius: 22,
-              padding: 18,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-            }}
-          >
-            <Text style={{ color: "#D6A84F", fontSize: 13, fontWeight: "800" }}>TREINOS</Text>
-            <Text style={{ color: "#F5F7FA", fontSize: 34, fontWeight: "800", marginTop: 12 }}>5</Text>
-            <Text style={{ color: "#A6A8B3", fontSize: 14 }}>Esta semana</Text>
-          </View>
+          <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+            Você começou com {startWeight.toFixed(1)} kg e já completou {progress}% do caminho até {targetWeight.toFixed(1)} kg.
+          </KairosText>
+        </KairosCard>
+      ) : null}
 
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "#11131D",
-              borderRadius: 22,
-              padding: 18,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-            }}
-          >
-            <Text style={{ color: "#7C5CFF", fontSize: 13, fontWeight: "800" }}>STREAK</Text>
-            <Text style={{ color: "#F5F7FA", fontSize: 34, fontWeight: "800", marginTop: 12 }}>14</Text>
-            <Text style={{ color: "#A6A8B3", fontSize: 14 }}>dias</Text>
-          </View>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+      <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
+        <KairosStatCard
+          label="Treinos"
+          value="5"
+          description="Esta semana"
+          accent="gold"
+          style={{ flex: 1 }}
+        />
+
+        <KairosStatCard
+          label="Streak"
+          value="14"
+          description="dias"
+          accent="purple"
+          style={{ flex: 1 }}
+        />
+      </View>
+    </KairosScreen>
   );
 }

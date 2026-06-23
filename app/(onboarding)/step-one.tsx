@@ -1,117 +1,123 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosButton } from "@/components/ui/KairosButton";
+import { KairosInput } from "@/components/ui/KairosInput";
+import { KairosLogo } from "@/components/ui/KairosLogo";
+import { KairosText } from "@/components/ui/KairosText";
+import { physicalDataSchema, type PhysicalDataFormData } from "@/features/onboarding/onboarding.schema";
+import { useOnboardingStore } from "@/stores/onboarding.store";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { router } from "expo-router";
+import { Controller, useForm } from "react-hook-form";
+import { View } from "react-native";
 
 export default function OnboardingStepOneScreen() {
+  const onboarding = useOnboardingStore();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PhysicalDataFormData>({
+    resolver: zodResolver(physicalDataSchema),
+    defaultValues: {
+      name: onboarding.name,
+      age: onboarding.age,
+      currentWeightKg: onboarding.currentWeightKg,
+      heightCm: onboarding.heightCm,
+    },
+  });
+
+  function onSubmit(data: PhysicalDataFormData) {
+    onboarding.setPhysicalData(data);
+
+    if (onboarding.journeyMode === "with_history") {
+      router.push("/(onboarding)/history");
+      return;
+    }
+
+    router.push("/(tabs)/home");
+  }
+
   return (
-    <LinearGradient colors={["#05050A", "#0E1018", "#05050A"]} style={{ flex: 1, padding: 24 }}>
-      <View style={{ marginTop: 80 }}>
-        <Text style={{ color: "#D6A84F", fontSize: 14, fontWeight: "800", letterSpacing: 4 }}>
-          ETAPA 1 DE 4
-        </Text>
+    <KairosScreen>
+      <KairosLogo />
 
-        <Text
-          style={{
-            color: "#F5F7FA",
-            fontSize: 38,
-            fontWeight: "800",
-            lineHeight: 46,
-            marginTop: 24,
-          }}
-        >
-          Construa seu plano Kairos.
-        </Text>
+      <KairosText variant="label" style={{ marginTop: 32 }}>
+        Etapa 2 de 4
+      </KairosText>
 
-        <Text
-          style={{
-            color: "#A6A8B3",
-            fontSize: 16,
-            lineHeight: 24,
-            marginTop: 12,
-            marginBottom: 32,
-          }}
-        >
-          Comece com seus dados básicos para a IA entender seu ponto de partida.
-        </Text>
+      <KairosText variant="title" style={{ marginTop: 18 }}>
+        Seu ponto de partida.
+      </KairosText>
 
-        <View style={{ gap: 14 }}>
-          <TextInput
-            placeholder="Nome"
-            placeholderTextColor="#6B7280"
-            style={{
-              backgroundColor: "#11131D",
-              color: "#F5F7FA",
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-              fontSize: 16,
-            }}
-          />
+      <KairosText variant="subtitle" style={{ marginTop: 10 }}>
+        Esses dados ajudam a Kairos AI a calcular suas metas iniciais.
+      </KairosText>
 
-          <TextInput
-            placeholder="Idade"
-            keyboardType="numeric"
-            placeholderTextColor="#6B7280"
-            style={{
-              backgroundColor: "#11131D",
-              color: "#F5F7FA",
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-              fontSize: 16,
-            }}
-          />
+      <View style={{ gap: 14, marginTop: 28 }}>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, value } }) => (
+            <KairosInput
+              label="Nome"
+              placeholder="Ex: Diogo"
+              value={value}
+              onChangeText={onChange}
+              error={errors.name?.message}
+            />
+          )}
+        />
 
-          <TextInput
-            placeholder="Peso atual em kg"
-            keyboardType="numeric"
-            placeholderTextColor="#6B7280"
-            style={{
-              backgroundColor: "#11131D",
-              color: "#F5F7FA",
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-              fontSize: 16,
-            }}
-          />
+        <Controller
+          control={control}
+          name="age"
+          render={({ field: { onChange, value } }) => (
+            <KairosInput
+              label="Idade"
+              placeholder="Ex: 25"
+              keyboardType="numeric"
+              value={value}
+              onChangeText={onChange}
+              error={errors.age?.message}
+            />
+          )}
+        />
 
-          <TextInput
-            placeholder="Altura em cm"
-            keyboardType="numeric"
-            placeholderTextColor="#6B7280"
-            style={{
-              backgroundColor: "#11131D",
-              color: "#F5F7FA",
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-              fontSize: 16,
-            }}
-          />
-        </View>
+        <Controller
+          control={control}
+          name="currentWeightKg"
+          render={({ field: { onChange, value } }) => (
+            <KairosInput
+              label="Peso atual"
+              placeholder="Ex: 145"
+              keyboardType="numeric"
+              value={value}
+              onChangeText={onChange}
+              error={errors.currentWeightKg?.message}
+            />
+          )}
+        />
 
-        <Link
-          href="/(tabs)/home"
-          style={{
-            marginTop: 32,
-            backgroundColor: "#D6A84F",
-            color: "#05050A",
-            fontSize: 16,
-            fontWeight: "800",
-            paddingVertical: 18,
-            textAlign: "center",
-            borderRadius: 18,
-            overflow: "hidden",
-          }}
-        >
-          Gerar meu plano
-        </Link>
+        <Controller
+          control={control}
+          name="heightCm"
+          render={({ field: { onChange, value } }) => (
+            <KairosInput
+              label="Altura"
+              placeholder="Ex: 180"
+              keyboardType="numeric"
+              value={value}
+              onChangeText={onChange}
+              error={errors.heightCm?.message}
+            />
+          )}
+        />
       </View>
-    </LinearGradient>
+
+      <KairosButton style={{ marginTop: 28 }} onPress={handleSubmit(onSubmit)}>
+        Continuar
+      </KairosButton>
+    </KairosScreen>
   );
 }

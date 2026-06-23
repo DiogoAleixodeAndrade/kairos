@@ -1,63 +1,57 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, Text, View } from "react-native";
+import { KairosHeader } from "@/components/layout/KairosHeader";
+import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosCard } from "@/components/ui/KairosCard";
+import { KairosText } from "@/components/ui/KairosText";
+import { colors } from "@/styles/theme";
+import { View } from "react-native";
 
 export default function FoodScreen() {
+  const meals = [
+    { title: "Café da manhã", calories: 430 },
+    { title: "Almoço", calories: 620 },
+    { title: "Lanche", calories: 210 },
+    { title: "Jantar", calories: 510 },
+    { title: "Ceia", calories: 120 },
+  ];
+
   return (
-    <LinearGradient colors={["#05050A", "#0B0D14", "#05050A"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 70, paddingBottom: 120 }}>
-        <Text style={{ color: "#D6A84F", fontSize: 20, fontWeight: "800", letterSpacing: 5 }}>
-          KAIROS
-        </Text>
+    <KairosScreen>
+      <KairosHeader
+        title="Alimentação"
+        subtitle="Abasteça seu corpo. Eleve seu potencial."
+      />
 
-        <Text style={{ color: "#F5F7FA", fontSize: 42, fontWeight: "800", marginTop: 32 }}>
-          Alimentação
-        </Text>
+      <KairosCard variant="gold" style={{ marginTop: 28 }}>
+        <KairosText variant="label" color={colors.gold}>
+          Calorias
+        </KairosText>
 
-        <Text style={{ color: "#A6A8B3", fontSize: 16, marginTop: 8 }}>
-          Abasteça seu corpo. Eleve seu potencial.
-        </Text>
+        <KairosText variant="metric" style={{ marginTop: 20 }}>
+          1.890
+          <KairosText variant="body" color={colors.muted} style={{ fontSize: 22 }}>
+            {" "}
+            / 2.600
+          </KairosText>
+        </KairosText>
 
-        <View
-          style={{
-            marginTop: 28,
-            backgroundColor: "#11131D",
-            borderRadius: 26,
-            borderWidth: 1,
-            borderColor: "rgba(214,168,79,0.28)",
-            padding: 22,
-          }}
-        >
-          <Text style={{ color: "#D6A84F", fontSize: 13, fontWeight: "800", letterSpacing: 2 }}>
-            CALORIAS
-          </Text>
+        <KairosText variant="body" color={colors.gold} style={{ marginTop: 8 }}>
+          72% da meta
+        </KairosText>
+      </KairosCard>
 
-          <Text style={{ color: "#F5F7FA", fontSize: 42, fontWeight: "800", marginTop: 20 }}>
-            1.890
-            <Text style={{ color: "#A6A8B3", fontSize: 22 }}> / 2.600</Text>
-          </Text>
+      <View style={{ gap: 12, marginTop: 18 }}>
+        {meals.map((meal) => (
+          <KairosCard key={meal.title} style={{ borderRadius: 18 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+              <KairosText variant="body" style={{ fontWeight: "800" }}>
+                {meal.title}
+              </KairosText>
 
-          <Text style={{ color: "#D6A84F", fontSize: 16, marginTop: 8 }}>72% da meta</Text>
-        </View>
-
-        {["Café da manhã", "Almoço", "Lanche", "Jantar", "Ceia"].map((meal, index) => (
-          <View
-            key={meal}
-            style={{
-              marginTop: 12,
-              backgroundColor: "#11131D",
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={{ color: "#F5F7FA", fontSize: 16, fontWeight: "700" }}>{meal}</Text>
-            <Text style={{ color: "#A6A8B3", fontSize: 15 }}>{[430, 620, 210, 510, 120][index]} kcal</Text>
-          </View>
+              <KairosText variant="subtitle">{meal.calories} kcal</KairosText>
+            </View>
+          </KairosCard>
         ))}
-      </ScrollView>
-    </LinearGradient>
+      </View>
+    </KairosScreen>
   );
 }

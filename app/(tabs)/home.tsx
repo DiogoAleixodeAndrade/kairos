@@ -9,15 +9,43 @@ import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosQuickAction } from "@/components/ui/KairosQuickAction";
 import { KairosText } from "@/components/ui/KairosText";
 import { dashboardMock } from "@/features/dashboard/dashboard.mock";
+import { useNutritionStore } from "@/stores/nutrition.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
-import { Brain, Camera, Droplets, Moon, Plus, Scale, Utensils } from "lucide-react-native";
+import {
+  Brain,
+  Camera,
+  Droplets,
+  Moon,
+  Plus,
+  Scale,
+  Utensils,
+} from "lucide-react-native";
 import { View } from "react-native";
 
 export default function HomeScreen() {
   const data = dashboardMock;
+  const { targets, getTodaySummary } = useNutritionStore();
+  const nutritionSummary = getTodaySummary();
 
-  const caloriesPercentage = Math.round((data.calories.current / data.calories.target) * 100);
+  data.calories.current = Math.round(nutritionSummary.caloriesKcal);
+  data.calories.target = targets.caloriesKcal;
+
+  data.macros.protein.current = Math.round(nutritionSummary.proteinG);
+  data.macros.protein.target = targets.proteinG;
+
+  data.macros.carbs.current = Math.round(nutritionSummary.carbsG);
+  data.macros.carbs.target = targets.carbsG;
+
+  data.macros.fat.current = Math.round(nutritionSummary.fatG);
+  data.macros.fat.target = targets.fatG;
+
+  data.water.currentMl = nutritionSummary.waterMl;
+  data.water.targetMl = targets.waterMl;
+
+  const caloriesPercentage = Math.round(
+    (data.calories.current / data.calories.target) * 100,
+  );
   const waterLiters = data.water.currentMl / 1000;
   const waterTargetLiters = data.water.targetMl / 1000;
 
@@ -27,7 +55,13 @@ export default function HomeScreen() {
 
   return (
     <KairosScreen>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <KairosLogo />
 
         <View
@@ -40,7 +74,11 @@ export default function HomeScreen() {
             paddingHorizontal: 14,
           }}
         >
-          <KairosText variant="body" color={colors.gold} style={{ fontSize: 13, fontWeight: "900" }}>
+          <KairosText
+            variant="body"
+            color={colors.gold}
+            style={{ fontSize: 13, fontWeight: "900" }}
+          >
             {data.user.streakDays} dias
           </KairosText>
         </View>
@@ -59,7 +97,13 @@ export default function HomeScreen() {
       </KairosText>
 
       <KairosCard variant="gold" style={{ marginTop: 28 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 16 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            gap: 16,
+          }}
+        >
           <View style={{ flex: 1 }}>
             <KairosText variant="label" color={colors.gold}>
               Calorias de hoje
@@ -85,7 +129,11 @@ export default function HomeScreen() {
               justifyContent: "center",
             }}
           >
-            <KairosText variant="body" color={colors.gold} style={{ fontSize: 22, fontWeight: "900" }}>
+            <KairosText
+              variant="body"
+              color={colors.gold}
+              style={{ fontSize: 22, fontWeight: "900" }}
+            >
               {caloriesPercentage}%
             </KairosText>
           </View>
@@ -154,7 +202,10 @@ export default function HomeScreen() {
           Treino de hoje
         </KairosText>
 
-        <KairosText variant="body" style={{ fontSize: 26, fontWeight: "900", marginTop: 12 }}>
+        <KairosText
+          variant="body"
+          style={{ fontSize: 26, fontWeight: "900", marginTop: 12 }}
+        >
           {data.training.title}
         </KairosText>
 
@@ -165,14 +216,20 @@ export default function HomeScreen() {
         <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Duração</KairosText>
-            <KairosText variant="body" style={{ fontWeight: "900", marginTop: 2 }}>
+            <KairosText
+              variant="body"
+              style={{ fontWeight: "900", marginTop: 2 }}
+            >
               {data.training.durationMinutes} min
             </KairosText>
           </View>
 
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Estimativa</KairosText>
-            <KairosText variant="body" style={{ fontWeight: "900", marginTop: 2 }}>
+            <KairosText
+              variant="body"
+              style={{ fontWeight: "900", marginTop: 2 }}
+            >
               {data.training.estimatedCalories} kcal
             </KairosText>
           </View>
@@ -189,10 +246,16 @@ export default function HomeScreen() {
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-          De {data.weight.startKg} kg para {data.weight.currentKg} kg. Meta: {data.weight.targetKg} kg.
+          De {data.weight.startKg} kg para {data.weight.currentKg} kg. Meta:{" "}
+          {data.weight.targetKg} kg.
         </KairosText>
 
-        <KairosProgressBar value={weightProgress} max={100} color={colors.gold} style={{ marginTop: 16 }} />
+        <KairosProgressBar
+          value={weightProgress}
+          max={100}
+          color={colors.gold}
+          style={{ marginTop: 16 }}
+        />
 
         <KairosText variant="body" color={colors.gold} style={{ marginTop: 8 }}>
           {weightProgress}% do caminho concluído

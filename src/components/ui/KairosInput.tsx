@@ -1,14 +1,15 @@
 import { colors, radius } from "@/styles/theme";
-import { Text, TextInput, type TextInputProps, View } from "react-native";
+import { Text, TextInput, type TextInputProps, View, type ViewStyle } from "react-native";
 
 type KairosInputProps = TextInputProps & {
   label?: string;
   error?: string;
+  containerStyle?: ViewStyle;
 };
 
-export function KairosInput({ label, error, style, ...props }: KairosInputProps) {
+export function KairosInput({ label, error, style, containerStyle, ...props }: KairosInputProps) {
   return (
-    <View>
+    <View style={[{ flex: 1 }, containerStyle]}>
       {label ? (
         <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "700", marginBottom: 8 }}>
           {label}

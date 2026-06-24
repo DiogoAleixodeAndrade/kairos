@@ -8,6 +8,8 @@ import { KairosText } from "@/components/ui/KairosText";
 import { useGamificationStore } from "@/stores/gamification.store";
 import { colors } from "@/styles/theme";
 import { Alert, View } from "react-native";
+import { signOut } from "@/features/auth/auth.service";
+import { router } from "expo-router";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("pt-BR");
@@ -37,6 +39,15 @@ export default function ProfileScreen() {
       ]
     );
   }
+
+  async function handleSignOut() {
+  try {
+    await signOut();
+    router.replace("/(auth)/welcome");
+  } catch {
+    Alert.alert("Erro", "Não foi possível sair da conta.");
+  }
+}
 
   return (
     <KairosScreen>
@@ -145,9 +156,13 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      <KairosButton variant="ghost" style={{ marginTop: 28 }} onPress={handleReset}>
-        Zerar gamificação demo
+      <KairosButton variant="secondary" style={{ marginTop: 28 }} onPress={handleSignOut}>
+        Sair da conta
       </KairosButton>
+
+      <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={handleReset}>
+  Zerar gamificação demo
+</KairosButton>
     </KairosScreen>
   );
 }

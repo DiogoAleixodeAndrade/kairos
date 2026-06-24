@@ -1,32 +1,18 @@
-import { KairosButton } from "@/components/ui/KairosButton";
-import { KairosLogo } from "@/components/ui/KairosLogo";
-import { KairosText } from "@/components/ui/KairosText";
-import { colors } from "@/styles/theme";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { KairosLoadingScreen } from "@/components/layout/KairosLoadingScreen";
+import { useAuthStore } from "@/stores/auth.store";
+import { Redirect } from "expo-router";
 
 export default function IndexScreen() {
-  return (
-    <LinearGradient
-      colors={[colors.background, colors.backgroundSoft, colors.background]}
-      style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}
-    >
-      <KairosLogo size="lg" />
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-      <KairosText variant="title" style={{ marginTop: 24, textAlign: "center" }}>
-        O tempo certo para evoluir.
-      </KairosText>
+  if (isLoading) {
+    return <KairosLoadingScreen />;
+  }
 
-      <KairosText variant="subtitle" style={{ marginTop: 12, textAlign: "center" }}>
-        Seu sistema inteligente de alimentação, treino, sono e evolução com IA.
-      </KairosText>
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)/home" />;
+  }
 
-      <KairosButton
-        style={{ marginTop: 40, alignSelf: "stretch" }}
-        onPress={() => router.push("/(auth)/welcome")}
-      >
-        Começar agora
-      </KairosButton>
-    </LinearGradient>
-  );
+  return <Redirect href="/(auth)/welcome" />;
 }

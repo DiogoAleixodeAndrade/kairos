@@ -40,5 +40,9 @@
     "**/*.d.ts",
     "nativewind-env.d.ts",
     "global.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "supabase/functions/**/*"
   ]
 }

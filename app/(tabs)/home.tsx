@@ -12,6 +12,7 @@ import { dashboardMock } from "@/features/dashboard/dashboard.mock";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { useSleepStore } from "@/stores/sleep.store";
 import { useTrainingStore } from "@/stores/training.store";
+import { useProgressStore } from "@/stores/progress.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import {
@@ -32,6 +33,12 @@ export default function HomeScreen() {
     state.getCompletedWorkoutsThisWeek(),
   );
   const sleepSummary = useSleepStore((state) => state.getSleepSummary());
+
+  const progressSummary = useProgressStore((state) => state.getSummary());
+
+  data.weight.currentKg = progressSummary.currentWeightKg;
+  data.weight.startKg = progressSummary.startWeightKg;
+  data.weight.targetKg = progressSummary.targetWeightKg;
 
   if (todayWorkout) {
     data.training.title = todayWorkout.title;

@@ -1,76 +1,164 @@
 import { KairosStatCard } from "@/components/cards/KairosStatCard";
 import { KairosHeader } from "@/components/layout/KairosHeader";
 import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
+import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosText } from "@/components/ui/KairosText";
-import { useOnboardingStore } from "@/stores/onboarding.store";
+import { useProgressStore } from "@/stores/progress.store";
 import { colors } from "@/styles/theme";
-import { View } from "react-native";
+import { router } from "expo-router";
+import { Camera, Ruler, Scale } from "lucide-react-native";
+import { Image, View } from "react-native";
 
 export default function ProgressScreen() {
-  const onboarding = useOnboardingStore();
-
-  const currentWeight = Number(onboarding.currentWeightKg || 145);
-  const startWeight =
-    onboarding.journeyMode === "with_history"
-      ? Number(onboarding.journeyStartWeightKg || 185)
-      : currentWeight;
-
-  const targetWeight = Number(onboarding.targetWeightKg || 120);
-  const lostWeight = startWeight > currentWeight ? startWeight - currentWeight : 0;
-  const totalGoal = startWeight > targetWeight ? startWeight - targetWeight : 0;
-  const progress = totalGoal > 0 ? Math.min(100, Math.round((lostWeight / totalGoal) * 100)) : 0;
+  const summary = useProgressStore((state) => state.getSummary());
+  const weightLogs = useProgressStore((state) => state.weightLogs);
+  const measurements = useProgressStore((state) => state.measurements);
+  const photos = useProgressStore((state) => state.photos);
 
   return (
     <KairosScreen>
       <KairosHeader title="Progresso" subtitle="Cada escolha te move para frente." />
 
-      <KairosCard variant="gold" style={{ marginTop: 28, alignItems: "center" }}>
+      <KairosCard variant="gold" style={{ marginTop: 28 }}>
         <KairosText variant="label" color={colors.gold}>
-          Peso atual
+          Jornada de peso
         </KairosText>
 
-        <KairosText variant="metric" style={{ fontSize: 52, marginTop: 12 }}>
-          {currentWeight.toFixed(1)} kg
+        <KairosText variant="metric" style={{ marginTop: 14 }}>
+          -{summary.lostWeightKg.toFixed(1)} kg
         </KairosText>
 
-        <KairosText variant="body" color={colors.gold} style={{ marginTop: 8 }}>
-          {progress}% até a meta
+        <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+          De {summary.startWeightKg.toFixed(1)} kg para {summary.currentWeightKg.toFixed(1)} kg.
+          Meta: {summary.targetWeightKg.toFixed(1)} kg.
+        </KairosText>
+
+        <KairosProgressBar
+          value={summary.progressPercentage}
+          max={100}
+          color={colors.gold}
+          style={{ marginTop: 18 }}
+        />
+
+        <KairosText variant="body" color={colors.gold} style={{ marginTop: 8, fontWeight: "900" }}>
+          {summary.progressPercentage}% do caminho concluído
         </KairosText>
       </KairosCard>
 
-      {onboarding.journeyMode === "with_history" ? (
-        <KairosCard variant="purple" style={{ marginTop: 14 }}>
-          <KairosText variant="label" color={colors.purple}>
-            Histórico da jornada
-          </KairosText>
-
-          <KairosText variant="metric" style={{ marginTop: 12 }}>
-            -{lostWeight.toFixed(1)} kg
-          </KairosText>
-
-          <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-            Você começou com {startWeight.toFixed(1)} kg e já completou {progress}% do caminho até {targetWeight.toFixed(1)} kg.
-          </KairosText>
-        </KairosCard>
-      ) : null}
-
       <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
         <KairosStatCard
-          label="Treinos"
-          value="5"
-          description="Esta semana"
+          label="Atual"
+          value={`${summary.currentWeightKg.toFixed(1)}`}
+          description="kg"
           accent="gold"
           style={{ flex: 1 }}
         />
 
         <KairosStatCard
-          label="Streak"
-          value="14"
-          description="dias"
+          label="Faltam"
+          value={`${summary.remainingWeightKg.toFixed(1)}`}
+          description="kg até a meta"
           accent="purple"
           style={{ flex: 1 }}
         />
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 12, marginTop: 18 }}>
+        <KairosButton style={{ flex: 1 }} onPress={() => router.push("/progress/weight")}>
+          Peso
+        </KairosButton>
+
+        <KairosButton
+          variant="secondary"
+          style={{ flex: 1 }}
+          onPress={() => router.push("/progress/measurements")}
+        >
+          Medidas
+        </KairosButton>
+      </View>
+
+      <KairosButton
+        variant="secondary"
+        style={{ marginTop: 12 }}
+        onPress={() => router.push("/progress/photos")}
+      >
+        Fotos de evolução
+      </KairosButton>
+
+      {summary.latestPhotoUri ? (
+        <KairosCard variant="purple" style={{ marginTop: 18 }}>
+          <KairosText variant="label" color={colors.purple}>
+            Foto mais recente
+          </KairosText>
+
+          <Image
+            source={{ uri: summary.latestPhotoUri }}
+            style={{
+              width: "100%",
+              height: 260,
+              borderRadius: 22,
+              marginTop: 14,
+              backgroundColor: colors.backgroundSoft,
+            }}
+            resizeMode="cover"
+          />
+        </KairosCard>
+      ) : null}
+
+      <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
+        Registros
+      </KairosText>
+
+      <View style={{ gap: 12, marginTop: 14 }}>
+        <KairosCard style={{ borderRadius: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Scale color={colors.gold} size={24} />
+
+            <View style={{ flex: 1 }}>
+              <KairosText variant="body" style={{ fontWeight: "900" }}>
+                Pesos registrados
+              </KairosText>
+
+              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                {weightLogs.length} registros
+              </KairosText>
+            </View>
+          </View>
+        </KairosCard>
+
+        <KairosCard style={{ borderRadius: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Ruler color={colors.purple} size={24} />
+
+            <View style={{ flex: 1 }}>
+              <KairosText variant="body" style={{ fontWeight: "900" }}>
+                Medidas registradas
+              </KairosText>
+
+              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                {measurements.length} registros
+              </KairosText>
+            </View>
+          </View>
+        </KairosCard>
+
+        <KairosCard style={{ borderRadius: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Camera color={colors.blue} size={24} />
+
+            <View style={{ flex: 1 }}>
+              <KairosText variant="body" style={{ fontWeight: "900" }}>
+                Fotos de evolução
+              </KairosText>
+
+              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                {photos.length} fotos
+              </KairosText>
+            </View>
+          </View>
+        </KairosCard>
       </View>
     </KairosScreen>
   );

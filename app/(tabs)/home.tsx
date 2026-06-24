@@ -10,6 +10,8 @@ import { KairosQuickAction } from "@/components/ui/KairosQuickAction";
 import { KairosText } from "@/components/ui/KairosText";
 import { dashboardMock } from "@/features/dashboard/dashboard.mock";
 import { useNutritionStore } from "@/stores/nutrition.store";
+import { useSleepStore } from "@/stores/sleep.store";
+import { useTrainingStore } from "@/stores/training.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import {
@@ -25,6 +27,22 @@ import { View } from "react-native";
 
 export default function HomeScreen() {
   const data = dashboardMock;
+  const todayWorkout = useTrainingStore((state) => state.getTodayWorkout());
+  const completedThisWeek = useTrainingStore((state) =>
+    state.getCompletedWorkoutsThisWeek(),
+  );
+  const sleepSummary = useSleepStore((state) => state.getSleepSummary());
+
+  if (todayWorkout) {
+    data.training.title = todayWorkout.title;
+    data.training.subtitle = todayWorkout.subtitle;
+    data.training.durationMinutes = todayWorkout.durationMinutes;
+    data.training.estimatedCalories = todayWorkout.estimatedCalories;
+    data.training.completed = todayWorkout.status === "completed";
+  }
+
+  data.sleep.duration = sleepSummary.durationText;
+  data.sleep.quality = sleepSummary.qualityScore;
   const { targets, getTodaySummary } = useNutritionStore();
   const nutritionSummary = getTodaySummary();
 
@@ -311,7 +329,7 @@ export default function HomeScreen() {
           title="Sono"
           subtitle="Registrar noite"
           icon={<Moon color={colors.blue} size={24} />}
-          onPress={() => router.push("/(tabs)/progress")}
+          onPress={() => router.push("/sleep")}
         />
 
         <KairosQuickAction

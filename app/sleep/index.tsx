@@ -1,0 +1,116 @@
+import { KairosHeader } from "@/components/layout/KairosHeader";
+import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosButton } from "@/components/ui/KairosButton";
+import { KairosCard } from "@/components/ui/KairosCard";
+import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
+import { KairosText } from "@/components/ui/KairosText";
+import { useSleepStore } from "@/stores/sleep.store";
+import { colors } from "@/styles/theme";
+import { router } from "expo-router";
+import { Moon, Sunrise } from "lucide-react-native";
+import { View } from "react-native";
+
+export default function SleepScreen() {
+  const summary = useSleepStore((state) => state.getSleepSummary());
+  const lastSleepLog = useSleepStore((state) => state.getLastSleepLog());
+
+  const targetMinutes = 450;
+  const sleepPercentage =
+    targetMinutes > 0 ? Math.min(100, Math.round((summary.durationMinutes / targetMinutes) * 100)) : 0;
+
+  return (
+    <KairosScreen>
+      <KairosHeader
+        title="Sono"
+        subtitle="Sua recuperação define a qualidade da sua evolução."
+      />
+
+      <KairosCard variant="purple" style={{ marginTop: 28 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Moon color={colors.purple} size={28} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="label" color={colors.purple}>
+              Última noite
+            </KairosText>
+
+            <KairosText variant="metric" style={{ marginTop: 10 }}>
+              {summary.durationText}
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+              Meta ideal: 7h30min
+            </KairosText>
+          </View>
+        </View>
+
+        <KairosProgressBar
+          value={summary.durationMinutes}
+          max={targetMinutes}
+          color={colors.purple}
+          style={{ marginTop: 18 }}
+        />
+
+        <KairosText variant="body" color={colors.purple} style={{ marginTop: 8, fontWeight: "900" }}>
+          {sleepPercentage}% da meta
+        </KairosText>
+      </KairosCard>
+
+      <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
+        <KairosCard style={{ flex: 1 }}>
+          <KairosText variant="label" color={colors.gold}>
+            Qualidade
+          </KairosText>
+
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            {summary.qualityScore}/10
+          </KairosText>
+        </KairosCard>
+
+        <KairosCard style={{ flex: 1 }}>
+          <KairosText variant="label" color={colors.blue}>
+            Energia
+          </KairosText>
+
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            {summary.energyScore}/10
+          </KairosText>
+        </KairosCard>
+      </View>
+
+      <KairosCard variant="blue" style={{ marginTop: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Sunrise color={colors.blue} size={26} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="label" color={colors.blue}>
+              Análise rápida
+            </KairosText>
+
+            <KairosText variant="body" style={{ marginTop: 10 }}>
+              {summary.durationMinutes >= 420
+                ? "Seu sono ficou dentro de uma boa faixa. Mantenha a consistência do horário."
+                : "Seu sono ficou abaixo do ideal. Hoje tente antecipar sua rotina noturna."}
+            </KairosText>
+          </View>
+        </View>
+      </KairosCard>
+
+      {lastSleepLog?.notes ? (
+        <KairosCard style={{ marginTop: 14 }}>
+          <KairosText variant="label" color={colors.gold}>
+            Observação
+          </KairosText>
+
+          <KairosText variant="body" style={{ marginTop: 10 }}>
+            {lastSleepLog.notes}
+          </KairosText>
+        </KairosCard>
+      ) : null}
+
+      <KairosButton style={{ marginTop: 28 }} onPress={() => router.push("/sleep/add")}>
+        Registrar sono
+      </KairosButton>
+    </KairosScreen>
+  );
+}

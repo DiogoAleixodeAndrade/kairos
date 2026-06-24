@@ -7,11 +7,39 @@ import { useTrainingStore } from "@/stores/training.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { CheckCircle2, Dumbbell } from "lucide-react-native";
+import { useMemo } from "react";
 import { View } from "react-native";
 
+function isToday(date: string) {
+  return new Date(date).toDateString() === new Date().toDateString();
+}
+
+function isThisWeek(date: string) {
+  const now = new Date();
+  const target = new Date(date);
+
+  const firstDayOfWeek = new Date(now);
+  firstDayOfWeek.setDate(now.getDate() - now.getDay());
+  firstDayOfWeek.setHours(0, 0, 0, 0);
+
+  const lastDayOfWeek = new Date(firstDayOfWeek);
+  lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+  lastDayOfWeek.setHours(23, 59, 59, 999);
+
+  return target >= firstDayOfWeek && target <= lastDayOfWeek;
+}
+
 export default function TrainingScreen() {
-  const todayWorkout = useTrainingStore((state) => state.getTodayWorkout());
-  const completedThisWeek = useTrainingStore((state) => state.getCompletedWorkoutsThisWeek());
+  const workouts = useTrainingStore((state) => state.workouts);
+  const sessions = useTrainingStore((state) => state.sessions);
+
+  const todayWorkout = useMemo(() => {
+    return workouts.find((workout) => isToday(workout.scheduledFor)) ?? null;
+  }, [workouts]);
+
+  const completedThisWeek = useMemo(() => {
+    return sessions.filter((session) => isThisWeek(session.startedAt)).length;
+  }, [sessions]);
 
   return (
     <KairosScreen>
@@ -38,7 +66,10 @@ export default function TrainingScreen() {
                   Treino de hoje
                 </KairosText>
 
-                <KairosText variant="body" style={{ fontSize: 30, fontWeight: "900", marginTop: 8 }}>
+                <KairosText
+                  variant="body"
+                  style={{ fontSize: 30, fontWeight: "900", marginTop: 8 }}
+                >
                   {todayWorkout.title}
                 </KairosText>
 
@@ -51,6 +82,7 @@ export default function TrainingScreen() {
             <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
               <View style={{ flex: 1 }}>
                 <KairosText variant="subtitle">Duração</KairosText>
+
                 <KairosText variant="body" style={{ fontWeight: "900", marginTop: 2 }}>
                   {todayWorkout.durationMinutes} min
                 </KairosText>
@@ -58,6 +90,7 @@ export default function TrainingScreen() {
 
               <View style={{ flex: 1 }}>
                 <KairosText variant="subtitle">Estimativa</KairosText>
+
                 <KairosText variant="body" style={{ fontWeight: "900", marginTop: 2 }}>
                   {todayWorkout.estimatedCalories} kcal
                 </KairosText>
@@ -67,6 +100,7 @@ export default function TrainingScreen() {
             {todayWorkout.status === "completed" ? (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 18 }}>
                 <CheckCircle2 color={colors.success} size={20} />
+
                 <KairosText variant="body" color={colors.success} style={{ fontWeight: "900" }}>
                   Treino concluído
                 </KairosText>
@@ -92,7 +126,8 @@ export default function TrainingScreen() {
                     </KairosText>
 
                     <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                      {exercise.muscleGroup} • {exercise.targetSets} séries • {exercise.targetReps} reps
+                      {exercise.muscleGroup} • {exercise.targetSets} séries •{" "}
+                      {exercise.targetReps} reps
                     </KairosText>
                   </View>
 

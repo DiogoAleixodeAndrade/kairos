@@ -8,15 +8,49 @@ import { useSleepStore } from "@/stores/sleep.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { Moon, Sunrise } from "lucide-react-native";
+import { useMemo } from "react";
 import { View } from "react-native";
 
+function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours}h${String(remainingMinutes).padStart(2, "0")}min`;
+}
+
 export default function SleepScreen() {
-  const summary = useSleepStore((state) => state.getSleepSummary());
-  const lastSleepLog = useSleepStore((state) => state.getLastSleepLog());
+  const sleepLogs = useSleepStore((state) => state.sleepLogs);
+
+  const lastSleepLog = useMemo(() => {
+    return sleepLogs[0] ?? null;
+  }, [sleepLogs]);
+
+  const summary = useMemo(() => {
+    if (!lastSleepLog) {
+      return {
+        durationMinutes: 0,
+        durationText: "0h00min",
+        qualityScore: 0,
+        energyScore: 0,
+        interruptions: 0,
+      };
+    }
+
+    return {
+      durationMinutes: lastSleepLog.durationMinutes,
+      durationText: formatDuration(lastSleepLog.durationMinutes),
+      qualityScore: lastSleepLog.qualityScore,
+      energyScore: lastSleepLog.energyScore,
+      interruptions: lastSleepLog.interruptions,
+    };
+  }, [lastSleepLog]);
 
   const targetMinutes = 450;
+
   const sleepPercentage =
-    targetMinutes > 0 ? Math.min(100, Math.round((summary.durationMinutes / targetMinutes) * 100)) : 0;
+    targetMinutes > 0
+      ? Math.min(100, Math.round((summary.durationMinutes / targetMinutes) * 100))
+      : 0;
 
   return (
     <KairosScreen>

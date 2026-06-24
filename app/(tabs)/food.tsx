@@ -21,13 +21,6 @@ const mealTypeLabels = {
   other: "Outro",
 };
 
-const awardAction = useGamificationStore((state) => state.awardAction);
-
-function handleAddWater(amountMl: number) {
-  addWater(amountMl);
-  awardAction("water_logged");
-}
-
 export default function FoodScreen() {
   const {
     targets,
@@ -36,6 +29,13 @@ export default function FoodScreen() {
     getTodayMeals,
     getTodaySummary,
   } = useNutritionStore();
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
+
+  function handleAddWater(amountMl: number) {
+    addWater(amountMl);
+    awardAction("water_logged");
+  }
 
   const meals = getTodayMeals();
   const summary = getTodaySummary();

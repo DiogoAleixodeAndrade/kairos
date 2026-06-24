@@ -41,7 +41,7 @@ export default function WelcomeScreen() {
         <KairosButton
           variant="ghost"
           style={{ marginTop: 6 }}
-          onPress={() => router.push("/(tabs)/home")}
+          onPress={() => router.push("/(onboarding)/journey")}
         >
           Entrar no app demo
         </KairosButton>

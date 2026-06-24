@@ -41,6 +41,8 @@ export function KairosButton({
     ghost: "transparent",
   }[variant];
 
+  const isTextChild = typeof children === "string" || typeof children === "number";
+
   return (
     <Pressable
       onPress={onPress}
@@ -52,7 +54,9 @@ export function KairosButton({
           borderWidth: 1,
           borderRadius: radius.lg,
           paddingVertical: 18,
+          paddingHorizontal: 18,
           alignItems: "center",
+          justifyContent: "center",
           opacity: pressed ? 0.82 : 1,
         },
         style,
@@ -60,8 +64,10 @@ export function KairosButton({
     >
       {loading ? (
         <ActivityIndicator color={textColor} />
-      ) : (
+      ) : isTextChild ? (
         <Text style={{ color: textColor, fontSize: 16, fontWeight: "800" }}>{children}</Text>
+      ) : (
+        children
       )}
     </Pressable>
   );

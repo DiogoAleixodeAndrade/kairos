@@ -11,9 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useProgressStore } from "@/stores/progress.store";
 
 export default function OnboardingHistoryScreen() {
   const onboarding = useOnboardingStore();
+  const setJourneyWeights = useProgressStore((state) => state.setJourneyWeights);
 
   const {
     control,
@@ -37,10 +39,24 @@ export default function OnboardingHistoryScreen() {
   const totalGoal = startWeight > targetWeight ? startWeight - targetWeight : 0;
   const progress = totalGoal > 0 ? Math.round((lostWeight / totalGoal) * 100) : 0;
 
-  function onSubmit(data: JourneyHistoryFormData) {
-    onboarding.setJourneyHistory(data);
-    router.push("/(tabs)/home");
-  }
+  function toNumber(value: string) {
+  const normalized = value.replace(",", ".");
+  const number = Number(normalized);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+function onSubmit(data: JourneyHistoryFormData) {
+  onboarding.setJourneyHistory(data);
+
+  setJourneyWeights({
+    startWeightKg: toNumber(data.journeyStartWeightKg),
+    currentWeightKg: toNumber(onboarding.currentWeightKg),
+    targetWeightKg: toNumber(data.targetWeightKg),
+  });
+
+  router.push("/(tabs)/home");
+}
 
   return (
     <KairosScreen>

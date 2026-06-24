@@ -1,3 +1,15 @@
+import { useMemo } from "react";
+import { View } from "react-native";
+import { router } from "expo-router";
+import {
+  Brain,
+  Camera,
+  Droplets,
+  Moon,
+  Scale,
+  Utensils,
+} from "lucide-react-native";
+
 import { KairosAIInsightCard } from "@/components/cards/KairosAIInsightCard";
 import { KairosMacroCard } from "@/components/cards/KairosMacroCard";
 import { KairosScoreCard } from "@/components/cards/KairosScoreCard";
@@ -8,86 +20,119 @@ import { KairosLogo } from "@/components/ui/KairosLogo";
 import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosQuickAction } from "@/components/ui/KairosQuickAction";
 import { KairosText } from "@/components/ui/KairosText";
+
 import { dashboardMock } from "@/features/dashboard/dashboard.mock";
-import { useNutritionStore } from "@/stores/nutrition.store";
-import { useSleepStore } from "@/stores/sleep.store";
-import { useTrainingStore } from "@/stores/training.store";
-import { useProgressStore } from "@/stores/progress.store";
 import { useAIStore } from "@/stores/ai.store";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { useNutritionStore } from "@/stores/nutrition.store";
+import { useProgressStore } from "@/stores/progress.store";
+import { useSleepStore } from "@/stores/sleep.store";
+import { useTrainingStore } from "@/stores/training.store";
 import { colors } from "@/styles/theme";
-import { router } from "expo-router";
-import {
-  Brain,
-  Camera,
-  Droplets,
-  Moon,
-  Plus,
-  Scale,
-  Utensils,
-} from "lucide-react-native";
-import { View } from "react-native";
 
 export default function HomeScreen() {
-  const data = dashboardMock;
-  const todayWorkout = useTrainingStore((state) => state.getTodayWorkout());
-  const completedThisWeek = useTrainingStore((state) =>
-    state.getCompletedWorkoutsThisWeek(),
+  const targets = useNutritionStore((state) => state.targets);
+  const meals = useNutritionStore((state) => state.meals);
+  const waterLogs = useNutritionStore((state) => state.waterLogs);
+  const getTodaySummary = useNutritionStore((state) => state.getTodaySummary);
+
+  const nutritionSummary = useMemo(() => {
+    return getTodaySummary();
+  }, [getTodaySummary, meals, waterLogs]);
+
+  const workouts = useTrainingStore((state) => state.workouts);
+  const sessions = useTrainingStore((state) => state.sessions);
+  const getTodayWorkout = useTrainingStore((state) => state.getTodayWorkout);
+
+  const getCompletedWorkoutsThisWeek = useTrainingStore(
+    (state) => state.getCompletedWorkoutsThisWeek
   );
-  const sleepSummary = useSleepStore((state) => state.getSleepSummary());
 
-  const progressSummary = useProgressStore((state) => state.getSummary());
+  const todayWorkout = useMemo(() => {
+    return getTodayWorkout();
+  }, [getTodayWorkout, workouts]);
 
-  const latestAIReport = useAIStore((state) => state.getLatestReport());
+  const completedThisWeek = useMemo(() => {
+    return getCompletedWorkoutsThisWeek();
+  }, [getCompletedWorkoutsThisWeek, sessions]);
 
-  const levelInfo = useGamificationStore((state) => state.getLevelInfo());
+  const sleepLogs = useSleepStore((state) => state.sleepLogs);
+  const getSleepSummary = useSleepStore((state) => state.getSleepSummary);
 
-  if (latestAIReport) {
-    data.ai.message = latestAIReport.recommendation;
-    data.score = latestAIReport.consistencyScore;
-  }
+  const sleepSummary = useMemo(() => {
+    return getSleepSummary();
+  }, [getSleepSummary, sleepLogs]);
 
-  data.weight.currentKg = progressSummary.currentWeightKg;
-  data.weight.startKg = progressSummary.startWeightKg;
-  data.weight.targetKg = progressSummary.targetWeightKg;
+  const weightLogs = useProgressStore((state) => state.weightLogs);
+  const measurements = useProgressStore((state) => state.measurements);
+  const photos = useProgressStore((state) => state.photos);
+  const startWeightKg = useProgressStore((state) => state.startWeightKg);
+  const targetWeightKg = useProgressStore((state) => state.targetWeightKg);
+  const getProgressSummary = useProgressStore((state) => state.getSummary);
 
-  if (todayWorkout) {
-    data.training.title = todayWorkout.title;
-    data.training.subtitle = todayWorkout.subtitle;
-    data.training.durationMinutes = todayWorkout.durationMinutes;
-    data.training.estimatedCalories = todayWorkout.estimatedCalories;
-    data.training.completed = todayWorkout.status === "completed";
-  }
+  const progressSummary = useMemo(() => {
+    return getProgressSummary();
+  }, [
+    getProgressSummary,
+    weightLogs,
+    measurements,
+    photos,
+    startWeightKg,
+    targetWeightKg,
+  ]);
 
-  data.sleep.duration = sleepSummary.durationText;
-  data.sleep.quality = sleepSummary.qualityScore;
-  const { targets, getTodaySummary } = useNutritionStore();
-  const nutritionSummary = getTodaySummary();
+  const totalXp = useGamificationStore((state) => state.totalXp);
+  const getLevelInfo = useGamificationStore((state) => state.getLevelInfo);
 
-  data.calories.current = Math.round(nutritionSummary.caloriesKcal);
-  data.calories.target = targets.caloriesKcal;
+  const levelInfo = useMemo(() => {
+    return getLevelInfo();
+  }, [getLevelInfo, totalXp]);
 
-  data.macros.protein.current = Math.round(nutritionSummary.proteinG);
-  data.macros.protein.target = targets.proteinG;
+  const reports = useAIStore((state) => state.reports);
+  const getLatestReport = useAIStore((state) => state.getLatestReport);
 
-  data.macros.carbs.current = Math.round(nutritionSummary.carbsG);
-  data.macros.carbs.target = targets.carbsG;
+  const latestAIReport = useMemo(() => {
+    return getLatestReport();
+  }, [getLatestReport, reports]);
 
-  data.macros.fat.current = Math.round(nutritionSummary.fatG);
-  data.macros.fat.target = targets.fatG;
+  const userName = dashboardMock.user.name;
+  const streakDays = dashboardMock.user.streakDays;
 
-  data.water.currentMl = nutritionSummary.waterMl;
-  data.water.targetMl = targets.waterMl;
+  const caloriesCurrent = Math.round(nutritionSummary.caloriesKcal);
+  const caloriesTarget = targets.caloriesKcal;
 
-  const caloriesPercentage = Math.round(
-    (data.calories.current / data.calories.target) * 100,
-  );
-  const waterLiters = data.water.currentMl / 1000;
-  const waterTargetLiters = data.water.targetMl / 1000;
+  const caloriesPercentage =
+    caloriesTarget > 0
+      ? Math.round((caloriesCurrent / caloriesTarget) * 100)
+      : 0;
 
-  const lostWeight = data.weight.startKg - data.weight.currentKg;
-  const totalGoal = data.weight.startKg - data.weight.targetKg;
-  const weightProgress = Math.round((lostWeight / totalGoal) * 100);
+  const proteinCurrent = Math.round(nutritionSummary.proteinG);
+  const carbsCurrent = Math.round(nutritionSummary.carbsG);
+  const fatCurrent = Math.round(nutritionSummary.fatG);
+
+  const waterLiters = nutritionSummary.waterMl / 1000;
+  const waterTargetLiters = targets.waterMl / 1000;
+
+  const trainingTitle = todayWorkout?.title ?? dashboardMock.training.title;
+  const trainingSubtitle =
+    todayWorkout?.subtitle ?? dashboardMock.training.subtitle;
+  const trainingDurationMinutes =
+    todayWorkout?.durationMinutes ?? dashboardMock.training.durationMinutes;
+  const trainingEstimatedCalories =
+    todayWorkout?.estimatedCalories ??
+    dashboardMock.training.estimatedCalories;
+
+  const sleepDuration = sleepSummary.durationText || dashboardMock.sleep.duration;
+  const sleepQuality = sleepSummary.qualityScore || dashboardMock.sleep.quality;
+
+  const currentWeightKg = progressSummary.currentWeightKg;
+  const startWeightKgValue = progressSummary.startWeightKg;
+  const targetWeightKgValue = progressSummary.targetWeightKg;
+  const lostWeight = progressSummary.lostWeightKg;
+  const weightProgress = progressSummary.progressPercentage;
+
+  const aiMessage = latestAIReport?.recommendation ?? dashboardMock.ai.message;
+  const score = latestAIReport?.consistencyScore ?? dashboardMock.score;
 
   return (
     <KairosScreen>
@@ -110,7 +155,14 @@ export default function HomeScreen() {
             paddingHorizontal: 14,
           }}
         >
-          <KairosText variant="body" color={colors.gold} style={{ fontSize: 13, fontWeight: "900" }}>
+          <KairosText
+            variant="body"
+            color={colors.gold}
+            style={{
+              fontSize: 13,
+              fontWeight: "900",
+            }}
+          >
             Nv. {levelInfo.level}
           </KairosText>
         </View>
@@ -121,11 +173,11 @@ export default function HomeScreen() {
       </KairosText>
 
       <KairosText variant="title" style={{ marginTop: 4 }}>
-        {data.user.name} ✦
+        {userName} ✦
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-        Hoje é o momento certo para evoluir.
+        Hoje é o momento certo para evoluir. Sequência atual: {streakDays} dias.
       </KairosText>
 
       <KairosCard variant="gold" style={{ marginTop: 28 }}>
@@ -142,11 +194,11 @@ export default function HomeScreen() {
             </KairosText>
 
             <KairosText variant="metric" style={{ marginTop: 18 }}>
-              {data.calories.current}
+              {caloriesCurrent}
             </KairosText>
 
             <KairosText variant="subtitle">
-              de {data.calories.target} kcal
+              de {caloriesTarget} kcal
             </KairosText>
           </View>
 
@@ -164,7 +216,10 @@ export default function HomeScreen() {
             <KairosText
               variant="body"
               color={colors.gold}
-              style={{ fontSize: 22, fontWeight: "900" }}
+              style={{
+                fontSize: 22,
+                fontWeight: "900",
+              }}
             >
               {caloriesPercentage}%
             </KairosText>
@@ -172,8 +227,8 @@ export default function HomeScreen() {
         </View>
 
         <KairosProgressBar
-          value={data.calories.current}
-          max={data.calories.target}
+          value={caloriesCurrent}
+          max={caloriesTarget}
           color={colors.gold}
           style={{ marginTop: 18 }}
         />
@@ -187,24 +242,24 @@ export default function HomeScreen() {
         <View style={{ gap: 18, marginTop: 18 }}>
           <KairosMacroCard
             label="Proteína"
-            current={data.macros.protein.current}
-            target={data.macros.protein.target}
+            current={proteinCurrent}
+            target={targets.proteinG}
             unit="g"
             color={colors.gold}
           />
 
           <KairosMacroCard
             label="Carboidratos"
-            current={data.macros.carbs.current}
-            target={data.macros.carbs.target}
+            current={carbsCurrent}
+            target={targets.carbsG}
             unit="g"
             color={colors.blue}
           />
 
           <KairosMacroCard
             label="Gorduras"
-            current={data.macros.fat.current}
-            target={data.macros.fat.target}
+            current={fatCurrent}
+            target={targets.fatG}
             unit="g"
             color={colors.purple}
           />
@@ -222,8 +277,8 @@ export default function HomeScreen() {
 
         <KairosStatCard
           label="Sono"
-          value={data.sleep.duration}
-          description={`qualidade ${data.sleep.quality}/10`}
+          value={sleepDuration}
+          description={`qualidade ${sleepQuality}/10`}
           accent="purple"
           style={{ flex: 1 }}
         />
@@ -236,36 +291,52 @@ export default function HomeScreen() {
 
         <KairosText
           variant="body"
-          style={{ fontSize: 26, fontWeight: "900", marginTop: 12 }}
+          style={{
+            fontSize: 26,
+            fontWeight: "900",
+            marginTop: 12,
+          }}
         >
-          {data.training.title}
+          {trainingTitle}
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-          {data.training.subtitle}
+          {trainingSubtitle}
         </KairosText>
 
         <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Duração</KairosText>
+
             <KairosText
               variant="body"
-              style={{ fontWeight: "900", marginTop: 2 }}
+              style={{
+                fontWeight: "900",
+                marginTop: 2,
+              }}
             >
-              {data.training.durationMinutes} min
+              {trainingDurationMinutes} min
             </KairosText>
           </View>
 
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Estimativa</KairosText>
+
             <KairosText
               variant="body"
-              style={{ fontWeight: "900", marginTop: 2 }}
+              style={{
+                fontWeight: "900",
+                marginTop: 2,
+              }}
             >
-              {data.training.estimatedCalories} kcal
+              {trainingEstimatedCalories} kcal
             </KairosText>
           </View>
         </View>
+
+        <KairosText variant="subtitle" style={{ marginTop: 14 }}>
+          {completedThisWeek} treinos concluídos nesta semana.
+        </KairosText>
       </KairosCard>
 
       <KairosCard variant="gold" style={{ marginTop: 14 }}>
@@ -278,8 +349,9 @@ export default function HomeScreen() {
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-          De {data.weight.startKg} kg para {data.weight.currentKg} kg. Meta:{" "}
-          {data.weight.targetKg} kg.
+          De {startWeightKgValue.toFixed(1)} kg para{" "}
+          {currentWeightKg.toFixed(1)} kg. Meta:{" "}
+          {targetWeightKgValue.toFixed(1)} kg.
         </KairosText>
 
         <KairosProgressBar
@@ -295,11 +367,11 @@ export default function HomeScreen() {
       </KairosCard>
 
       <View style={{ marginTop: 14 }}>
-        <KairosScoreCard score={data.score} />
+        <KairosScoreCard score={score} />
       </View>
 
       <View style={{ marginTop: 14 }}>
-        <KairosAIInsightCard message={data.ai.message} />
+        <KairosAIInsightCard message={aiMessage} />
       </View>
 
       <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
@@ -327,14 +399,14 @@ export default function HomeScreen() {
           title="Peso"
           subtitle="Atualizar hoje"
           icon={<Scale color={colors.purple} size={24} />}
-          onPress={() => router.push("/(tabs)/progress")}
+          onPress={() => router.push("/progress/weight")}
         />
 
         <KairosQuickAction
           title="Foto"
           subtitle="Evolução"
           icon={<Camera color={colors.gold} size={24} />}
-          onPress={() => router.push("/(tabs)/progress")}
+          onPress={() => router.push("/progress/photos")}
         />
       </View>
 

@@ -17,7 +17,9 @@ export function useAuthSession() {
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
-          throw error;
+          console.error("Erro ao carregar sessão:", error.message);
+          if (mounted) clearAuth();
+          return;
         }
 
         if (!mounted) return;
@@ -34,6 +36,9 @@ export function useAuthSession() {
         } else {
           clearAuth();
         }
+      } catch (error) {
+        console.error("Erro inesperado na sessão:", error);
+        if (mounted) clearAuth();
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -43,7 +48,7 @@ export function useAuthSession() {
 
     loadSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -62,7 +67,7 @@ export function useAuthSession() {
 
     return () => {
       mounted = false;
-      listener.subscription.unsubscribe();
+      data.subscription.unsubscribe();
     };
   }, [clearAuth, setIsLoading, setUser]);
 }

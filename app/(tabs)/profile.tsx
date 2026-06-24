@@ -5,22 +5,37 @@ import { KairosScreen } from "@/components/layout/KairosScreen";
 import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosText } from "@/components/ui/KairosText";
+import { signOut } from "@/features/auth/auth.service";
+import { ACHIEVEMENTS, getLevelInfo as getGamificationLevelInfo } from "@/features/gamification/gamification.config";
 import { useGamificationStore } from "@/stores/gamification.store";
 import { colors } from "@/styles/theme";
-import { Alert, View } from "react-native";
-import { signOut } from "@/features/auth/auth.service";
 import { router } from "expo-router";
+import { useMemo } from "react";
+import { Alert, View } from "react-native";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("pt-BR");
 }
 
 export default function ProfileScreen() {
-  const levelInfo = useGamificationStore((state) => state.getLevelInfo());
-  const unlockedAchievements = useGamificationStore((state) => state.getUnlockedAchievements());
-  const lockedAchievements = useGamificationStore((state) => state.getLockedAchievements());
-  const recentXPLogs = useGamificationStore((state) => state.getRecentXPLogs());
+  const totalXp = useGamificationStore((state) => state.totalXp);
+  const xpLogs = useGamificationStore((state) => state.xpLogs);
+  const unlockedAchievements = useGamificationStore((state) => state.unlockedAchievements);
   const resetGamification = useGamificationStore((state) => state.resetGamification);
+
+  const levelInfo = useMemo(() => {
+    return getGamificationLevelInfo(totalXp);
+  }, [totalXp]);
+
+  const lockedAchievements = useMemo(() => {
+    const unlockedIds = new Set(unlockedAchievements.map((achievement) => achievement.id));
+
+    return ACHIEVEMENTS.filter((achievement) => !unlockedIds.has(achievement.id));
+  }, [unlockedAchievements]);
+
+  const recentXPLogs = useMemo(() => {
+    return xpLogs.slice(0, 8);
+  }, [xpLogs]);
 
   function handleReset() {
     Alert.alert(
@@ -41,13 +56,13 @@ export default function ProfileScreen() {
   }
 
   async function handleSignOut() {
-  try {
-    await signOut();
-    router.replace("/(auth)/welcome");
-  } catch {
-    Alert.alert("Erro", "Não foi possível sair da conta.");
+    try {
+      await signOut();
+      router.replace("/(auth)/welcome");
+    } catch {
+      Alert.alert("Erro", "Não foi possível sair da conta.");
+    }
   }
-}
 
   return (
     <KairosScreen>
@@ -161,8 +176,8 @@ export default function ProfileScreen() {
       </KairosButton>
 
       <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={handleReset}>
-  Zerar gamificação demo
-</KairosButton>
+        Zerar gamificação demo
+      </KairosButton>
     </KairosScreen>
   );
 }

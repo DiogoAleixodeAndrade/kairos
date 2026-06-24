@@ -9,13 +9,65 @@ import { useProgressStore } from "@/stores/progress.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { Camera, Ruler, Scale } from "lucide-react-native";
+import { useMemo } from "react";
 import { Image, View } from "react-native";
 
 export default function ProgressScreen() {
-  const summary = useProgressStore((state) => state.getSummary());
+  const startWeightKg = useProgressStore((state) => state.startWeightKg);
+  const targetWeightKg = useProgressStore((state) => state.targetWeightKg);
   const weightLogs = useProgressStore((state) => state.weightLogs);
   const measurements = useProgressStore((state) => state.measurements);
   const photos = useProgressStore((state) => state.photos);
+
+  const latestWeightLog = useMemo(() => {
+    if (weightLogs.length === 0) {
+      return null;
+    }
+
+    return [...weightLogs].sort((a, b) => {
+      return new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime();
+    })[0];
+  }, [weightLogs]);
+
+  const latestMeasurement = useMemo(() => {
+    if (measurements.length === 0) {
+      return null;
+    }
+
+    return [...measurements].sort((a, b) => {
+      return new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime();
+    })[0];
+  }, [measurements]);
+
+  const latestPhoto = useMemo(() => {
+    if (photos.length === 0) {
+      return null;
+    }
+
+    return [...photos].sort((a, b) => {
+      return new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime();
+    })[0];
+  }, [photos]);
+
+  const summary = useMemo(() => {
+    const currentWeightKg = latestWeightLog?.weightKg ?? startWeightKg;
+
+    const lostWeightKg = Math.max(0, startWeightKg - currentWeightKg);
+    const remainingWeightKg = Math.max(0, currentWeightKg - targetWeightKg);
+    const totalGoalKg = Math.max(1, startWeightKg - targetWeightKg);
+    const progressPercentage = Math.min(100, Math.round((lostWeightKg / totalGoalKg) * 100));
+
+    return {
+      startWeightKg,
+      currentWeightKg,
+      targetWeightKg,
+      lostWeightKg,
+      remainingWeightKg,
+      progressPercentage,
+      latestWaistCm: latestMeasurement?.waistCm,
+      latestPhotoUri: latestPhoto?.uri,
+    };
+  }, [latestMeasurement, latestPhoto, latestWeightLog, startWeightKg, targetWeightKg]);
 
   return (
     <KairosScreen>
@@ -31,8 +83,9 @@ export default function ProgressScreen() {
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-          De {summary.startWeightKg.toFixed(1)} kg para {summary.currentWeightKg.toFixed(1)} kg.
-          Meta: {summary.targetWeightKg.toFixed(1)} kg.
+          De {summary.startWeightKg.toFixed(1)} kg para{" "}
+          {summary.currentWeightKg.toFixed(1)} kg. Meta:{" "}
+          {summary.targetWeightKg.toFixed(1)} kg.
         </KairosText>
 
         <KairosProgressBar

@@ -13,6 +13,7 @@ import { useNutritionStore } from "@/stores/nutrition.store";
 import { useSleepStore } from "@/stores/sleep.store";
 import { useTrainingStore } from "@/stores/training.store";
 import { useProgressStore } from "@/stores/progress.store";
+import { useAIStore } from "@/stores/ai.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import {
@@ -35,6 +36,13 @@ export default function HomeScreen() {
   const sleepSummary = useSleepStore((state) => state.getSleepSummary());
 
   const progressSummary = useProgressStore((state) => state.getSummary());
+
+  const latestAIReport = useAIStore((state) => state.getLatestReport());
+
+  if (latestAIReport) {
+    data.ai.message = latestAIReport.recommendation;
+    data.score = latestAIReport.consistencyScore;
+  }
 
   data.weight.currentKg = progressSummary.currentWeightKg;
   data.weight.startKg = progressSummary.startWeightKg;

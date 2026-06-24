@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 function toOptionalNumber(value?: string) {
   if (!value) return undefined;
@@ -31,6 +32,8 @@ export default function MeasurementsScreen() {
   const addMeasurement = useProgressStore((state) => state.addMeasurement);
   const measurements = useProgressStore((state) => state.measurements);
   const latest = useProgressStore((state) => state.getLatestMeasurement());
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   const {
     control,
@@ -63,6 +66,8 @@ export default function MeasurementsScreen() {
       calfCm: toOptionalNumber(data.calfCm),
       notes: data.notes,
     });
+
+    awardAction("measurement_logged");
 
     router.back();
   }

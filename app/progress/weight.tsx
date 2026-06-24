@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 function toNumber(value: string) {
   const normalized = value.replace(",", ".");
@@ -26,6 +27,8 @@ export default function WeightScreen() {
   const addWeightLog = useProgressStore((state) => state.addWeightLog);
   const weightLogs = useProgressStore((state) => state.weightLogs);
   const currentWeight = useProgressStore((state) => state.getCurrentWeight());
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   const {
     control,
@@ -51,6 +54,8 @@ export default function WeightScreen() {
       weightKg,
       notes: data.notes,
     });
+
+    awardAction("weight_logged");
 
     router.back();
   }

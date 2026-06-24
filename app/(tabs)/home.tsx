@@ -14,6 +14,7 @@ import { useSleepStore } from "@/stores/sleep.store";
 import { useTrainingStore } from "@/stores/training.store";
 import { useProgressStore } from "@/stores/progress.store";
 import { useAIStore } from "@/stores/ai.store";
+import { useGamificationStore } from "@/stores/gamification.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import {
@@ -38,6 +39,8 @@ export default function HomeScreen() {
   const progressSummary = useProgressStore((state) => state.getSummary());
 
   const latestAIReport = useAIStore((state) => state.getLatestReport());
+
+  const levelInfo = useGamificationStore((state) => state.getLevelInfo());
 
   if (latestAIReport) {
     data.ai.message = latestAIReport.recommendation;
@@ -107,12 +110,8 @@ export default function HomeScreen() {
             paddingHorizontal: 14,
           }}
         >
-          <KairosText
-            variant="body"
-            color={colors.gold}
-            style={{ fontSize: 13, fontWeight: "900" }}
-          >
-            {data.user.streakDays} dias
+          <KairosText variant="body" color={colors.gold} style={{ fontSize: 13, fontWeight: "900" }}>
+            Nv. {levelInfo.level}
           </KairosText>
         </View>
       </View>

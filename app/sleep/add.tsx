@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 function toNumber(value: string) {
   const normalized = value.replace(",", ".");
@@ -19,6 +20,8 @@ function toNumber(value: string) {
 
 export default function AddSleepScreen() {
   const addSleepLog = useSleepStore((state) => state.addSleepLog);
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   const {
     control,
@@ -62,6 +65,8 @@ export default function AddSleepScreen() {
       interruptions,
       notes: data.notes,
     });
+
+    awardAction("sleep_logged");
 
     router.back();
   }

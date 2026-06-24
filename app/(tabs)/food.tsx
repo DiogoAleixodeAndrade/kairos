@@ -10,6 +10,7 @@ import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { Droplets, Plus } from "lucide-react-native";
 import { View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 const mealTypeLabels = {
   breakfast: "Café da manhã",
@@ -19,6 +20,13 @@ const mealTypeLabels = {
   supper: "Ceia",
   other: "Outro",
 };
+
+const awardAction = useGamificationStore((state) => state.awardAction);
+
+function handleAddWater(amountMl: number) {
+  addWater(amountMl);
+  awardAction("water_logged");
+}
 
 export default function FoodScreen() {
   const {
@@ -147,11 +155,11 @@ export default function FoodScreen() {
         />
 
         <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
-          <KairosButton style={{ flex: 1 }} onPress={() => addWater(250)}>
+          <KairosButton style={{ flex: 1 }} onPress={() => handleAddWater(250)}>
             +250ml
           </KairosButton>
 
-          <KairosButton style={{ flex: 1 }} variant="secondary" onPress={() => addWater(500)}>
+          <KairosButton style={{ flex: 1 }} variant="secondary" onPress={() => handleAddWater(500)}>
             +500ml
           </KairosButton>
         </View>

@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 const mealOptions: { value: MealType; title: string; description: string }[] = [
   {
@@ -54,6 +55,8 @@ function toNumber(value: string) {
 
 export default function AddMealScreen() {
   const addMeal = useNutritionStore((state) => state.addMeal);
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   const {
     control,
@@ -102,6 +105,8 @@ export default function AddMealScreen() {
         },
       ],
     });
+
+    awardAction("meal_logged");
 
     router.back();
   }

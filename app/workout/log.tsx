@@ -9,6 +9,7 @@ import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -25,6 +26,8 @@ export default function WorkoutLogScreen() {
   const todayWorkout = useTrainingStore((state) => state.getTodayWorkout());
   const addSession = useTrainingStore((state) => state.addSession);
   const completeTodayWorkout = useTrainingStore((state) => state.completeTodayWorkout);
+
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   const [durationMinutes, setDurationMinutes] = useState(
     todayWorkout?.durationMinutes ? String(todayWorkout.durationMinutes) : "60"
@@ -75,6 +78,8 @@ export default function WorkoutLogScreen() {
     });
 
     completeTodayWorkout();
+
+    awardAction("workout_completed");
 
     Alert.alert("Treino concluído", "Seu treino foi registrado com sucesso.");
     router.back();

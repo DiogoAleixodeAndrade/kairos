@@ -10,6 +10,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, Image, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 const photoTypes: { value: ProgressPhotoType; title: string; description: string }[] = [
   {
@@ -48,6 +49,8 @@ export default function PhotosScreen() {
   const addPhoto = useProgressStore((state) => state.addPhoto);
   const photos = useProgressStore((state) => state.photos);
 
+  const awardAction = useGamificationStore((state) => state.awardAction);
+
   const [selectedType, setSelectedType] = useState<ProgressPhotoType>("front");
 
   async function pickImage() {
@@ -75,6 +78,8 @@ export default function PhotosScreen() {
       Alert.alert("Erro", "Não foi possível carregar a foto.");
       return;
     }
+
+    awardAction("photo_logged");
 
     addPhoto({
       uri,

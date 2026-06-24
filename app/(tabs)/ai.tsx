@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import { Brain, Send, Sparkles } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, View } from "react-native";
+import { useGamificationStore } from "@/stores/gamification.store";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("pt-BR");
@@ -26,10 +27,12 @@ export default function AIScreen() {
   const clearMessages = useAIStore((state) => state.clearMessages);
   const isGeneratingReport = useAIStore((state) => state.isGeneratingReport);
   const isSendingMessage = useAIStore((state) => state.isSendingMessage);
+  const awardAction = useGamificationStore((state) => state.awardAction);
 
   async function handleGenerateReport() {
     try {
       await generateReport();
+      awardAction("ai_report_generated");
       Alert.alert("Relatório gerado", "A Kairos AI analisou seu dia.");
     } catch (error) {
       Alert.alert(

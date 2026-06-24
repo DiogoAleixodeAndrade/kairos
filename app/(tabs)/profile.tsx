@@ -1,52 +1,153 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, Text, View } from "react-native";
+import { KairosAchievementCard } from "@/components/cards/KairosAchievementCard";
+import { KairosLevelCard } from "@/components/cards/KairosLevelCard";
+import { KairosHeader } from "@/components/layout/KairosHeader";
+import { KairosScreen } from "@/components/layout/KairosScreen";
+import { KairosButton } from "@/components/ui/KairosButton";
+import { KairosCard } from "@/components/ui/KairosCard";
+import { KairosText } from "@/components/ui/KairosText";
+import { useGamificationStore } from "@/stores/gamification.store";
+import { colors } from "@/styles/theme";
+import { Alert, View } from "react-native";
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("pt-BR");
+}
 
 export default function ProfileScreen() {
+  const levelInfo = useGamificationStore((state) => state.getLevelInfo());
+  const unlockedAchievements = useGamificationStore((state) => state.getUnlockedAchievements());
+  const lockedAchievements = useGamificationStore((state) => state.getLockedAchievements());
+  const recentXPLogs = useGamificationStore((state) => state.getRecentXPLogs());
+  const resetGamification = useGamificationStore((state) => state.resetGamification);
+
+  function handleReset() {
+    Alert.alert(
+      "Reiniciar gamificação",
+      "Isso vai zerar XP, nível e conquistas neste ambiente de teste.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Zerar",
+          style: "destructive",
+          onPress: resetGamification,
+        },
+      ]
+    );
+  }
+
   return (
-    <LinearGradient colors={["#05050A", "#0B0D14", "#05050A"]} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 70, paddingBottom: 120 }}>
-        <Text style={{ color: "#D6A84F", fontSize: 20, fontWeight: "800", letterSpacing: 5 }}>
-          KAIROS
-        </Text>
+    <KairosScreen>
+      <KairosHeader
+        title="Perfil"
+        subtitle="Sua jornada, nível, XP e conquistas dentro do Kairos."
+      />
 
-        <Text style={{ color: "#F5F7FA", fontSize: 42, fontWeight: "800", marginTop: 32 }}>
-          Diogo ✦
-        </Text>
+      <View style={{ marginTop: 28 }}>
+        <KairosLevelCard {...levelInfo} />
+      </View>
 
-        <Text style={{ color: "#D6A84F", fontSize: 16, marginTop: 6 }}>Level 1 • Kairos Disciple</Text>
+      <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
+        <KairosCard style={{ flex: 1 }}>
+          <KairosText variant="label" color={colors.gold}>
+            Conquistas
+          </KairosText>
 
-        <View
-          style={{
-            marginTop: 28,
-            backgroundColor: "#11131D",
-            borderRadius: 26,
-            borderWidth: 1,
-            borderColor: "rgba(214,168,79,0.28)",
-            padding: 22,
-          }}
-        >
-          <Text style={{ color: "#F5F7FA", fontSize: 24, fontWeight: "800" }}>Objetivo atual</Text>
-          <Text style={{ color: "#A6A8B3", fontSize: 16, lineHeight: 24, marginTop: 8 }}>
-            Perder gordura, melhorar condicionamento e construir consistência.
-          </Text>
-        </View>
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            {unlockedAchievements.length}
+          </KairosText>
 
-        {["Configurações", "Notificações", "Plano Premium", "Aparência", "Privacidade"].map((item) => (
-          <View
-            key={item}
-            style={{
-              marginTop: 12,
-              backgroundColor: "#11131D",
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-              padding: 18,
-            }}
-          >
-            <Text style={{ color: "#F5F7FA", fontSize: 16, fontWeight: "700" }}>{item}</Text>
-          </View>
+          <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+            desbloqueadas
+          </KairosText>
+        </KairosCard>
+
+        <KairosCard style={{ flex: 1 }}>
+          <KairosText variant="label" color={colors.purple}>
+            Bloqueadas
+          </KairosText>
+
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            {lockedAchievements.length}
+          </KairosText>
+
+          <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+            para conquistar
+          </KairosText>
+        </KairosCard>
+      </View>
+
+      <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
+        Conquistas desbloqueadas
+      </KairosText>
+
+      <View style={{ gap: 12, marginTop: 14 }}>
+        {unlockedAchievements.length === 0 ? (
+          <KairosCard>
+            <KairosText variant="body" style={{ fontWeight: "900" }}>
+              Nenhuma conquista desbloqueada ainda.
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+              Registre uma refeição, água, treino, sono ou progresso para começar a ganhar XP.
+            </KairosText>
+          </KairosCard>
+        ) : (
+          unlockedAchievements.map((achievement) => (
+            <KairosAchievementCard key={achievement.id} achievement={achievement} />
+          ))
+        )}
+      </View>
+
+      <KairosText variant="label" color={colors.purple} style={{ marginTop: 28 }}>
+        Próximas conquistas
+      </KairosText>
+
+      <View style={{ gap: 12, marginTop: 14 }}>
+        {lockedAchievements.slice(0, 6).map((achievement) => (
+          <KairosAchievementCard key={achievement.id} achievement={achievement} locked />
         ))}
-      </ScrollView>
-    </LinearGradient>
+      </View>
+
+      <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
+        Histórico de XP
+      </KairosText>
+
+      <View style={{ gap: 12, marginTop: 14 }}>
+        {recentXPLogs.length === 0 ? (
+          <KairosCard>
+            <KairosText variant="body" style={{ fontWeight: "900" }}>
+              Nenhum XP recebido ainda.
+            </KairosText>
+          </KairosCard>
+        ) : (
+          recentXPLogs.map((log) => (
+            <KairosCard key={log.id} style={{ borderRadius: 18 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <KairosText variant="body" style={{ fontWeight: "900" }}>
+                    {log.reason}
+                  </KairosText>
+
+                  <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                    {formatDate(log.createdAt)}
+                  </KairosText>
+                </View>
+
+                <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
+                  +{log.amount} XP
+                </KairosText>
+              </View>
+            </KairosCard>
+          ))
+        )}
+      </View>
+
+      <KairosButton variant="ghost" style={{ marginTop: 28 }} onPress={handleReset}>
+        Zerar gamificação demo
+      </KairosButton>
+    </KairosScreen>
   );
 }

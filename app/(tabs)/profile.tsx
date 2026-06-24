@@ -6,8 +6,12 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosText } from "@/components/ui/KairosText";
 import { signOut } from "@/features/auth/auth.service";
-import { ACHIEVEMENTS, getLevelInfo as getGamificationLevelInfo } from "@/features/gamification/gamification.config";
+import {
+  ACHIEVEMENTS,
+  getLevelInfo as getGamificationLevelInfo,
+} from "@/features/gamification/gamification.config";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { useSyncStore } from "@/stores/sync.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { useMemo } from "react";
@@ -17,11 +21,21 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString("pt-BR");
 }
 
+function formatDateTime(date: string) {
+  return new Date(date).toLocaleString("pt-BR");
+}
+
 export default function ProfileScreen() {
   const totalXp = useGamificationStore((state) => state.totalXp);
   const xpLogs = useGamificationStore((state) => state.xpLogs);
   const unlockedAchievements = useGamificationStore((state) => state.unlockedAchievements);
   const resetGamification = useGamificationStore((state) => state.resetGamification);
+
+  const isSyncing = useSyncStore((state) => state.isSyncing);
+  const isRestoring = useSyncStore((state) => state.isRestoring);
+  const lastSyncedAt = useSyncStore((state) => state.lastSyncedAt);
+  const syncNow = useSyncStore((state) => state.syncNow);
+  const restoreNow = useSyncStore((state) => state.restoreNow);
 
   const levelInfo = useMemo(() => {
     return getGamificationLevelInfo(totalXp);
@@ -36,6 +50,48 @@ export default function ProfileScreen() {
   const recentXPLogs = useMemo(() => {
     return xpLogs.slice(0, 8);
   }, [xpLogs]);
+
+  async function handleSyncNow() {
+    try {
+      await syncNow();
+
+      Alert.alert("Sincronizado", "Seus dados foram salvos no Supabase.");
+    } catch (error) {
+      Alert.alert(
+        "Erro ao sincronizar",
+        error instanceof Error ? error.message : "Não foi possível sincronizar."
+      );
+    }
+  }
+
+  function handleRestoreNow() {
+    Alert.alert(
+      "Restaurar backup",
+      "Isso vai substituir os dados locais pelos dados salvos no Supabase.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Restaurar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await restoreNow();
+
+              Alert.alert("Backup restaurado", "Os dados do Supabase foram carregados no app.");
+            } catch (error) {
+              Alert.alert(
+                "Erro ao restaurar",
+                error instanceof Error ? error.message : "Não foi possível restaurar o backup."
+              );
+            }
+          },
+        },
+      ]
+    );
+  }
 
   function handleReset() {
     Alert.alert(
@@ -74,6 +130,39 @@ export default function ProfileScreen() {
       <View style={{ marginTop: 28 }}>
         <KairosLevelCard {...levelInfo} />
       </View>
+
+      <KairosCard variant="blue" style={{ marginTop: 14 }}>
+        <KairosText variant="label" color={colors.blue}>
+          Sincronização Supabase
+        </KairosText>
+
+        <KairosText variant="subtitle" style={{ marginTop: 8 }}>
+          Salve e restaure seus dados reais na nuvem. Funciona apenas com usuário logado.
+        </KairosText>
+
+        {lastSyncedAt ? (
+          <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
+            Última sincronização: {formatDateTime(lastSyncedAt)}
+          </KairosText>
+        ) : (
+          <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
+            Nenhuma sincronização feita ainda.
+          </KairosText>
+        )}
+
+        <KairosButton style={{ marginTop: 16 }} loading={isSyncing} onPress={handleSyncNow}>
+          Salvar no Supabase
+        </KairosButton>
+
+        <KairosButton
+          variant="secondary"
+          style={{ marginTop: 10 }}
+          loading={isRestoring}
+          onPress={handleRestoreNow}
+        >
+          Restaurar do Supabase
+        </KairosButton>
+      </KairosCard>
 
       <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
         <KairosCard style={{ flex: 1 }}>

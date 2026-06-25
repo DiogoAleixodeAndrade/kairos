@@ -5,12 +5,17 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosText } from "@/components/ui/KairosText";
+import {
+  getLastSevenDaysNutritionSummary,
+  getWeeklyNutritionAnalytics,
+} from "@/features/nutrition/nutrition-analytics.service";
 import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 import { useGamificationStore } from "@/stores/gamification.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
-import { Droplets, Plus } from "lucide-react-native";
+import { BarChart3, Droplets, Plus, TrendingUp } from "lucide-react-native";
+import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 
 const mealTypeLabels = {
@@ -23,19 +28,37 @@ const mealTypeLabels = {
 };
 
 export default function FoodScreen() {
-  const { targets, addWater, clearTodayWater, getTodayMeals, getTodaySummary } =
-    useNutritionStore();
+  const targets = useNutritionStore((state) => state.targets);
+  const mealsRaw = useNutritionStore((state) => state.meals);
+  const waterLogsRaw = useNutritionStore((state) => state.waterLogs);
+  const addWater = useNutritionStore((state) => state.addWater);
+  const clearTodayWater = useNutritionStore((state) => state.clearTodayWater);
+  const getTodayMeals = useNutritionStore((state) => state.getTodayMeals);
+  const getTodaySummary = useNutritionStore((state) => state.getTodaySummary);
 
   const awardAction = useGamificationStore((state) => state.awardAction);
+
+  const meals = useMemo(() => {
+    return getTodayMeals();
+  }, [getTodayMeals, mealsRaw]);
+
+  const summary = useMemo(() => {
+    return getTodaySummary();
+  }, [getTodaySummary, mealsRaw, waterLogsRaw]);
+
+  const weeklyDays = useMemo(() => {
+    return getLastSevenDaysNutritionSummary(mealsRaw, waterLogsRaw);
+  }, [mealsRaw, waterLogsRaw]);
+
+  const weeklyAnalytics = useMemo(() => {
+    return getWeeklyNutritionAnalytics(weeklyDays);
+  }, [weeklyDays]);
 
   function handleAddWater(amountMl: number) {
     addWater(amountMl);
     awardAction("water_logged");
     scheduleSafeAutoSync();
   }
-
-  const meals = getTodayMeals();
-  const summary = getTodaySummary();
 
   const caloriesPercentage =
     targets.caloriesKcal > 0
@@ -159,9 +182,117 @@ export default function FoodScreen() {
           </KairosButton>
         </View>
 
-        <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={clearTodayWater}>
+        <KairosButton
+          variant="ghost"
+          style={{ marginTop: 8 }}
+          onPress={() => {
+            clearTodayWater();
+            scheduleSafeAutoSync();
+          }}
+        >
           Zerar água de hoje
         </KairosButton>
+      </KairosCard>
+
+      <KairosCard variant="purple" style={{ marginTop: 18 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <BarChart3 color={colors.purple} size={24} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="label" color={colors.purple}>
+              Visão semanal
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+              Últimos 7 dias de alimentação.
+            </KairosText>
+          </View>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 14, marginTop: 18 }}>
+          <View style={{ flex: 1 }}>
+            <KairosText variant="subtitle">Média kcal</KairosText>
+
+            <KairosText variant="body" style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}>
+              {weeklyAnalytics.averageCalories}
+            </KairosText>
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="subtitle">Média proteína</KairosText>
+
+            <KairosText variant="body" style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}>
+              {weeklyAnalytics.averageProtein}g
+            </KairosText>
+          </View>
+        </View>
+
+        <View style={{ marginTop: 20, gap: 12 }}>
+          {weeklyDays.map((day) => {
+            const percentage = Math.max(
+              4,
+              Math.round((day.caloriesKcal / weeklyAnalytics.maxCalories) * 100)
+            );
+
+            return (
+              <View key={day.date}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                  }}
+                >
+                  <KairosText variant="subtitle" style={{ textTransform: "capitalize" }}>
+                    {day.label}
+                  </KairosText>
+
+                  <KairosText variant="subtitle">{Math.round(day.caloriesKcal)} kcal</KairosText>
+                </View>
+
+                <View
+                  style={{
+                    height: 10,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: `${percentage}%`,
+                      height: "100%",
+                      borderRadius: 999,
+                      backgroundColor: colors.purple,
+                    }}
+                  />
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </KairosCard>
+
+      <KairosCard variant="gold" style={{ marginTop: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <TrendingUp color={colors.gold} size={24} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="label" color={colors.gold}>
+              Insight semanal
+            </KairosText>
+
+            <KairosText variant="body" style={{ marginTop: 8 }}>
+              Sua média dos últimos 7 dias foi de {weeklyAnalytics.averageCalories} kcal e{" "}
+              {weeklyAnalytics.averageProtein}g de proteína por dia.
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 8 }}>
+              Melhor dia de proteína: {weeklyAnalytics.bestProteinDay.label} com{" "}
+              {Math.round(weeklyAnalytics.bestProteinDay.proteinG)}g.
+            </KairosText>
+          </View>
+        </View>
       </KairosCard>
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 28 }}>

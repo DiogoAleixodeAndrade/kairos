@@ -9,6 +9,8 @@ export const physicalDataSchema = z.object({
   age: z.string().min(1, "Digite sua idade."),
   currentWeightKg: z.string().min(1, "Digite seu peso atual."),
   heightCm: z.string().min(1, "Digite sua altura."),
+  objective: z.enum(["cut", "maintain", "gain"]),
+  activityLevel: z.enum(["sedentary", "light", "moderate", "high", "athlete"]),
 });
 
 export const journeyHistorySchema = z.object({

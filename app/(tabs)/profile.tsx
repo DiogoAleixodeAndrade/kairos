@@ -7,6 +7,7 @@ import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosText } from "@/components/ui/KairosText";
 import { signOut } from "@/features/auth/auth.service";
 import { useProfileStore } from "@/stores/profile.store";
+import { Target } from "lucide-react-native";
 import {
   ACHIEVEMENTS,
   getLevelInfo as getGamificationLevelInfo,
@@ -149,13 +150,39 @@ export default function ProfileScreen() {
         <KairosLevelCard {...levelInfo} />
       </View>
 
+      <KairosCard variant="gold" style={{ marginTop: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Target color={colors.gold} size={24} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="label" color={colors.gold}>
+              Metas nutricionais
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+              Edite calorias, macros e meta de água do seu plano.
+            </KairosText>
+          </View>
+        </View>
+
+        <KairosButton
+          variant="secondary"
+          style={{ marginTop: 16 }}
+          onPress={() => router.push("/profile/nutrition-goals")}
+        >
+          Editar metas
+        </KairosButton>
+      </KairosCard>
+
       <KairosCard variant="blue" style={{ marginTop: 14 }}>
         <KairosText variant="label" color={colors.blue}>
           Sincronização Supabase
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 8 }}>
-          Salve e restaure seus dados reais na nuvem. O app também tenta sincronizar automaticamente após ações importantes quando você está logado.
+          Salve e restaure seus dados reais na nuvem. O app também tenta
+          sincronizar automaticamente após ações importantes quando você está
+          logado.
         </KairosText>
 
         {lastSyncedAt ? (

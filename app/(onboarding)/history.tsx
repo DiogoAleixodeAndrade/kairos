@@ -4,7 +4,10 @@ import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosLogo } from "@/components/ui/KairosLogo";
 import { KairosScreen } from "@/components/layout/KairosScreen";
 import { KairosText } from "@/components/ui/KairosText";
-import { journeyHistorySchema, type JourneyHistoryFormData } from "@/features/onboarding/onboarding.schema";
+import {
+  journeyHistorySchema,
+  type JourneyHistoryFormData,
+} from "@/features/onboarding/onboarding.schema";
 import { useOnboardingStore } from "@/stores/onboarding.store";
 import { colors } from "@/styles/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,11 +16,18 @@ import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { useProgressStore } from "@/stores/progress.store";
 import { useProfileStore } from "@/stores/profile.store";
+import { calculateNutritionTargets } from "@/features/nutrition/nutrition-goals.service";
+import { useNutritionStore } from "@/stores/nutrition.store";
 
 export default function OnboardingHistoryScreen() {
   const onboarding = useOnboardingStore();
-  const completeOnboarding = useProfileStore((state) => state.completeOnboarding);
-  const setJourneyWeights = useProgressStore((state) => state.setJourneyWeights);
+  const completeOnboarding = useProfileStore(
+    (state) => state.completeOnboarding,
+  );
+  const setJourneyWeights = useProgressStore(
+    (state) => state.setJourneyWeights,
+  );
+  const setTargets = useNutritionStore((state) => state.setTargets);
 
   const {
     control,
@@ -37,30 +47,44 @@ export default function OnboardingHistoryScreen() {
   const currentWeight = Number(onboarding.currentWeightKg || 0);
   const targetWeight = Number(watch("targetWeightKg") || 0);
 
-  const lostWeight = startWeight > currentWeight ? startWeight - currentWeight : 0;
+  const lostWeight =
+    startWeight > currentWeight ? startWeight - currentWeight : 0;
   const totalGoal = startWeight > targetWeight ? startWeight - targetWeight : 0;
-  const progress = totalGoal > 0 ? Math.round((lostWeight / totalGoal) * 100) : 0;
+  const progress =
+    totalGoal > 0 ? Math.round((lostWeight / totalGoal) * 100) : 0;
 
   function toNumber(value: string) {
-  const normalized = value.replace(",", ".");
-  const number = Number(normalized);
+    const normalized = value.replace(",", ".");
+    const number = Number(normalized);
 
-  return Number.isFinite(number) ? number : 0;
-}
+    return Number.isFinite(number) ? number : 0;
+  }
 
-function onSubmit(data: JourneyHistoryFormData) {
-  onboarding.setJourneyHistory(data);
+  function onSubmit(data: JourneyHistoryFormData) {
+    onboarding.setJourneyHistory(data);
 
-  setJourneyWeights({
-    startWeightKg: toNumber(data.journeyStartWeightKg),
-    currentWeightKg: toNumber(onboarding.currentWeightKg),
-    targetWeightKg: toNumber(data.targetWeightKg),
-  });
+    const currentWeightKg = toNumber(onboarding.currentWeightKg);
 
-  completeOnboarding();
+    setJourneyWeights({
+      startWeightKg: toNumber(data.journeyStartWeightKg),
+      currentWeightKg,
+      targetWeightKg: toNumber(data.targetWeightKg),
+    });
 
-  router.replace("/(tabs)/home");
-}
+    const targets = calculateNutritionTargets({
+      age: toNumber(onboarding.age),
+      heightCm: toNumber(onboarding.heightCm),
+      currentWeightKg,
+      objective: onboarding.objective,
+      activityLevel: onboarding.activityLevel,
+    });
+
+    setTargets(targets);
+
+    completeOnboarding();
+
+    router.replace("/(tabs)/home");
+  }
 
   return (
     <KairosScreen>
@@ -75,7 +99,8 @@ function onSubmit(data: JourneyHistoryFormData) {
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 10 }}>
-        Seu progresso não começa hoje se você já vem lutando antes. O Kairos vai considerar toda sua caminhada.
+        Seu progresso não começa hoje se você já vem lutando antes. O Kairos vai
+        considerar toda sua caminhada.
       </KairosText>
 
       <View style={{ gap: 14, marginTop: 28 }}>
@@ -110,7 +135,9 @@ function onSubmit(data: JourneyHistoryFormData) {
 
         <KairosInput
           label="Peso atual"
-          value={onboarding.currentWeightKg ? `${onboarding.currentWeightKg} kg` : ""}
+          value={
+            onboarding.currentWeightKg ? `${onboarding.currentWeightKg} kg` : ""
+          }
           editable={false}
         />
 
@@ -141,7 +168,8 @@ function onSubmit(data: JourneyHistoryFormData) {
           </KairosText>
 
           <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-            Você já completou aproximadamente {progress}% do caminho até sua meta.
+            Você já completou aproximadamente {progress}% do caminho até sua
+            meta.
           </KairosText>
         </KairosCard>
       ) : null}

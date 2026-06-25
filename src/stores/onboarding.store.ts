@@ -1,3 +1,7 @@
+import type {
+  ActivityLevel,
+  NutritionObjective,
+} from "@/features/nutrition/nutrition-goals.service";
 import { create } from "zustand";
 
 type JourneyMode = "from_scratch" | "with_history";
@@ -8,6 +12,8 @@ type OnboardingState = {
   age: string;
   currentWeightKg: string;
   heightCm: string;
+  objective: NutritionObjective;
+  activityLevel: ActivityLevel;
   journeyStartDate: string;
   journeyStartWeightKg: string;
   targetWeightKg: string;
@@ -18,6 +24,8 @@ type OnboardingState = {
     age: string;
     currentWeightKg: string;
     heightCm: string;
+    objective: NutritionObjective;
+    activityLevel: ActivityLevel;
   }) => void;
   setJourneyHistory: (data: {
     journeyStartDate: string;
@@ -33,6 +41,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   age: "",
   currentWeightKg: "",
   heightCm: "",
+  objective: "cut",
+  activityLevel: "moderate",
   journeyStartDate: "",
   journeyStartWeightKg: "",
   targetWeightKg: "",
@@ -50,6 +60,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       age: "",
       currentWeightKg: "",
       heightCm: "",
+      objective: "cut",
+      activityLevel: "moderate",
       journeyStartDate: "",
       journeyStartWeightKg: "",
       targetWeightKg: "",

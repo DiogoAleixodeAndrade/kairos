@@ -3,15 +3,27 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosLogo } from "@/components/ui/KairosLogo";
 import { KairosText } from "@/components/ui/KairosText";
-import { physicalDataSchema, type PhysicalDataFormData } from "@/features/onboarding/onboarding.schema";
+import {
+  physicalDataSchema,
+  type PhysicalDataFormData,
+} from "@/features/onboarding/onboarding.schema";
 import { useOnboardingStore } from "@/stores/onboarding.store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useProfileStore } from "@/stores/profile.store";
+import { useProgressStore } from "@/stores/progress.store";
 
 export default function OnboardingStepOneScreen() {
   const onboarding = useOnboardingStore();
+  const setDisplayName = useProfileStore((state) => state.setDisplayName);
+  const completeOnboarding = useProfileStore(
+    (state) => state.completeOnboarding,
+  );
+  const setJourneyWeights = useProgressStore(
+    (state) => state.setJourneyWeights,
+  );
 
   const {
     control,
@@ -27,17 +39,34 @@ export default function OnboardingStepOneScreen() {
     },
   });
 
+  function toNumber(value: string) {
+    const normalized = value.replace(",", ".");
+    const number = Number(normalized);
+
+    return Number.isFinite(number) ? number : 0;
+  }
+
   function onSubmit(data: PhysicalDataFormData) {
     onboarding.setPhysicalData(data);
+    setDisplayName(data.name);
 
     if (onboarding.journeyMode === "with_history") {
       router.push("/(onboarding)/history");
       return;
     }
 
-    router.push("/(tabs)/home");
-  }
+    const currentWeightKg = toNumber(data.currentWeightKg);
 
+    setJourneyWeights({
+      startWeightKg: currentWeightKg,
+      currentWeightKg,
+      targetWeightKg: currentWeightKg,
+    });
+
+    completeOnboarding();
+
+    router.replace("/(tabs)/home");
+  }
   return (
     <KairosScreen>
       <KairosLogo />

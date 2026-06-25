@@ -20,6 +20,7 @@ import { KairosLogo } from "@/components/ui/KairosLogo";
 import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosQuickAction } from "@/components/ui/KairosQuickAction";
 import { KairosText } from "@/components/ui/KairosText";
+import { useProfileStore } from "@/stores/profile.store";
 
 import { dashboardMock } from "@/features/dashboard/dashboard.mock";
 import { useAIStore } from "@/stores/ai.store";
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const meals = useNutritionStore((state) => state.meals);
   const waterLogs = useNutritionStore((state) => state.waterLogs);
   const getTodaySummary = useNutritionStore((state) => state.getTodaySummary);
+  const displayName = useProfileStore((state) => state.displayName);
 
   const nutritionSummary = useMemo(() => {
     return getTodaySummary();
@@ -95,7 +97,7 @@ export default function HomeScreen() {
     return getLatestReport();
   }, [getLatestReport, reports]);
 
-  const userName = dashboardMock.user.name;
+  const userName = displayName || dashboardMock.user.name;
   const streakDays = dashboardMock.user.streakDays;
 
   const caloriesCurrent = Math.round(nutritionSummary.caloriesKcal);

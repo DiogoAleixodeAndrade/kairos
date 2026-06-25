@@ -11,9 +11,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, Pressable, Text, View } from "react-native";
+import { useProfileStore } from "@/stores/profile.store";
 
 export default function RegisterScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const setDemoMode = useProfileStore((state) => state.setDemoMode);
 
   const {
     control,
@@ -32,6 +35,7 @@ export default function RegisterScreen() {
     try {
       setIsSubmitting(true);
       await signUpWithEmail(data);
+      setDemoMode(false);
 
       Alert.alert("Conta criada", "Sua conta foi criada. Agora faça login para continuar.");
       router.replace("/(auth)/login");

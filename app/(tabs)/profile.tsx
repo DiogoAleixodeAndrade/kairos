@@ -6,6 +6,7 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosText } from "@/components/ui/KairosText";
 import { signOut } from "@/features/auth/auth.service";
+import { useProfileStore } from "@/stores/profile.store";
 import {
   ACHIEVEMENTS,
   getLevelInfo as getGamificationLevelInfo,
@@ -28,8 +29,13 @@ function formatDateTime(date: string) {
 export default function ProfileScreen() {
   const totalXp = useGamificationStore((state) => state.totalXp);
   const xpLogs = useGamificationStore((state) => state.xpLogs);
-  const unlockedAchievements = useGamificationStore((state) => state.unlockedAchievements);
-  const resetGamification = useGamificationStore((state) => state.resetGamification);
+  const unlockedAchievements = useGamificationStore(
+    (state) => state.unlockedAchievements,
+  );
+  const resetGamification = useGamificationStore(
+    (state) => state.resetGamification,
+  );
+  const resetProfileFlow = useProfileStore((state) => state.resetProfileFlow);
 
   const isSyncing = useSyncStore((state) => state.isSyncing);
   const isRestoring = useSyncStore((state) => state.isRestoring);
@@ -42,9 +48,13 @@ export default function ProfileScreen() {
   }, [totalXp]);
 
   const lockedAchievements = useMemo(() => {
-    const unlockedIds = new Set(unlockedAchievements.map((achievement) => achievement.id));
+    const unlockedIds = new Set(
+      unlockedAchievements.map((achievement) => achievement.id),
+    );
 
-    return ACHIEVEMENTS.filter((achievement) => !unlockedIds.has(achievement.id));
+    return ACHIEVEMENTS.filter(
+      (achievement) => !unlockedIds.has(achievement.id),
+    );
   }, [unlockedAchievements]);
 
   const recentXPLogs = useMemo(() => {
@@ -59,7 +69,9 @@ export default function ProfileScreen() {
     } catch (error) {
       Alert.alert(
         "Erro ao sincronizar",
-        error instanceof Error ? error.message : "Não foi possível sincronizar."
+        error instanceof Error
+          ? error.message
+          : "Não foi possível sincronizar.",
       );
     }
   }
@@ -80,16 +92,21 @@ export default function ProfileScreen() {
             try {
               await restoreNow();
 
-              Alert.alert("Backup restaurado", "Os dados do Supabase foram carregados no app.");
+              Alert.alert(
+                "Backup restaurado",
+                "Os dados do Supabase foram carregados no app.",
+              );
             } catch (error) {
               Alert.alert(
                 "Erro ao restaurar",
-                error instanceof Error ? error.message : "Não foi possível restaurar o backup."
+                error instanceof Error
+                  ? error.message
+                  : "Não foi possível restaurar o backup.",
               );
             }
           },
         },
-      ]
+      ],
     );
   }
 
@@ -107,13 +124,14 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: resetGamification,
         },
-      ]
+      ],
     );
   }
 
   async function handleSignOut() {
     try {
       await signOut();
+      resetProfileFlow();
       router.replace("/(auth)/welcome");
     } catch {
       Alert.alert("Erro", "Não foi possível sair da conta.");
@@ -137,20 +155,33 @@ export default function ProfileScreen() {
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 8 }}>
-          Salve e restaure seus dados reais na nuvem. Funciona apenas com usuário logado.
+          Salve e restaure seus dados reais na nuvem. Funciona apenas com
+          usuário logado.
         </KairosText>
 
         {lastSyncedAt ? (
-          <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
+          <KairosText
+            variant="body"
+            color={colors.blue}
+            style={{ marginTop: 10, fontWeight: "900" }}
+          >
             Última sincronização: {formatDateTime(lastSyncedAt)}
           </KairosText>
         ) : (
-          <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
+          <KairosText
+            variant="body"
+            color={colors.blue}
+            style={{ marginTop: 10, fontWeight: "900" }}
+          >
             Nenhuma sincronização feita ainda.
           </KairosText>
         )}
 
-        <KairosButton style={{ marginTop: 16 }} loading={isSyncing} onPress={handleSyncNow}>
+        <KairosButton
+          style={{ marginTop: 16 }}
+          loading={isSyncing}
+          onPress={handleSyncNow}
+        >
           Salvar no Supabase
         </KairosButton>
 
@@ -206,23 +237,35 @@ export default function ProfileScreen() {
             </KairosText>
 
             <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-              Registre uma refeição, água, treino, sono ou progresso para começar a ganhar XP.
+              Registre uma refeição, água, treino, sono ou progresso para
+              começar a ganhar XP.
             </KairosText>
           </KairosCard>
         ) : (
           unlockedAchievements.map((achievement) => (
-            <KairosAchievementCard key={achievement.id} achievement={achievement} />
+            <KairosAchievementCard
+              key={achievement.id}
+              achievement={achievement}
+            />
           ))
         )}
       </View>
 
-      <KairosText variant="label" color={colors.purple} style={{ marginTop: 28 }}>
+      <KairosText
+        variant="label"
+        color={colors.purple}
+        style={{ marginTop: 28 }}
+      >
         Próximas conquistas
       </KairosText>
 
       <View style={{ gap: 12, marginTop: 14 }}>
         {lockedAchievements.slice(0, 6).map((achievement) => (
-          <KairosAchievementCard key={achievement.id} achievement={achievement} locked />
+          <KairosAchievementCard
+            key={achievement.id}
+            achievement={achievement}
+            locked
+          />
         ))}
       </View>
 
@@ -240,7 +283,13 @@ export default function ProfileScreen() {
         ) : (
           recentXPLogs.map((log) => (
             <KairosCard key={log.id} style={{ borderRadius: 18 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
                 <View style={{ flex: 1 }}>
                   <KairosText variant="body" style={{ fontWeight: "900" }}>
                     {log.reason}
@@ -251,7 +300,11 @@ export default function ProfileScreen() {
                   </KairosText>
                 </View>
 
-                <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
+                <KairosText
+                  variant="body"
+                  color={colors.gold}
+                  style={{ fontWeight: "900" }}
+                >
                   +{log.amount} XP
                 </KairosText>
               </View>
@@ -260,11 +313,19 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      <KairosButton variant="secondary" style={{ marginTop: 28 }} onPress={handleSignOut}>
+      <KairosButton
+        variant="secondary"
+        style={{ marginTop: 28 }}
+        onPress={handleSignOut}
+      >
         Sair da conta
       </KairosButton>
 
-      <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={handleReset}>
+      <KairosButton
+        variant="ghost"
+        style={{ marginTop: 8 }}
+        onPress={handleReset}
+      >
         Zerar gamificação demo
       </KairosButton>
     </KairosScreen>

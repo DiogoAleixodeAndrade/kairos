@@ -12,9 +12,11 @@ import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { useProgressStore } from "@/stores/progress.store";
+import { useProfileStore } from "@/stores/profile.store";
 
 export default function OnboardingHistoryScreen() {
   const onboarding = useOnboardingStore();
+  const completeOnboarding = useProfileStore((state) => state.completeOnboarding);
   const setJourneyWeights = useProgressStore((state) => state.setJourneyWeights);
 
   const {
@@ -55,7 +57,9 @@ function onSubmit(data: JourneyHistoryFormData) {
     targetWeightKg: toNumber(data.targetWeightKg),
   });
 
-  router.push("/(tabs)/home");
+  completeOnboarding();
+
+  router.replace("/(tabs)/home");
 }
 
   return (

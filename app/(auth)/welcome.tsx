@@ -5,8 +5,11 @@ import { colors } from "@/styles/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { View } from "react-native";
+import { useProfileStore } from "@/stores/profile.store";
 
 export default function WelcomeScreen() {
+  const setDemoMode = useProfileStore((state) => state.setDemoMode);
+
   return (
     <LinearGradient
       colors={[colors.background, "#10111A", colors.background]}
@@ -15,12 +18,19 @@ export default function WelcomeScreen() {
       <View style={{ marginBottom: 64 }}>
         <KairosLogo size="lg" />
 
-        <KairosText variant="title" style={{ fontSize: 44, lineHeight: 52, marginTop: 32 }}>
+        <KairosText
+          variant="title"
+          style={{ fontSize: 44, lineHeight: 52, marginTop: 32 }}
+        >
           Evolua no tempo certo.
         </KairosText>
 
-        <KairosText variant="subtitle" style={{ fontSize: 17, lineHeight: 26, marginTop: 16 }}>
-          Alimentação, treino, sono, progresso e IA trabalhando juntos para sua melhor versão.
+        <KairosText
+          variant="subtitle"
+          style={{ fontSize: 17, lineHeight: 26, marginTop: 16 }}
+        >
+          Alimentação, treino, sono, progresso e IA trabalhando juntos para sua
+          melhor versão.
         </KairosText>
 
         <KairosButton
@@ -41,7 +51,10 @@ export default function WelcomeScreen() {
         <KairosButton
           variant="ghost"
           style={{ marginTop: 6 }}
-          onPress={() => router.push("/(onboarding)/journey")}
+          onPress={() => {
+            setDemoMode(true);
+            router.push("/(onboarding)/journey");
+          }}
         >
           Entrar no app demo
         </KairosButton>

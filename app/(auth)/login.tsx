@@ -11,9 +11,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, Pressable, Text, View } from "react-native";
+import { useProfileStore } from "@/stores/profile.store";
 
 export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const setDemoMode = useProfileStore((state) => state.setDemoMode);
 
   const {
     control,
@@ -31,7 +34,8 @@ export default function LoginScreen() {
     try {
       setIsSubmitting(true);
       await signInWithEmail(data);
-      router.replace("/(tabs)/home");
+      setDemoMode(false);
+      router.replace("/");
     } catch (error) {
       Alert.alert(
         "Erro ao entrar",

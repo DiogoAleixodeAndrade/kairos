@@ -4,66 +4,73 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosText } from "@/components/ui/KairosText";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 import { useAIStore } from "@/stores/ai.store";
+import { useGamificationStore } from "@/stores/gamification.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
-import { Brain, Send, Sparkles } from "lucide-react-native";
-import { useState } from "react";
-import { Alert, View } from "react-native";
-import { useGamificationStore } from "@/stores/gamification.store";
-import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+import { Brain, MessageCircle, Send, Sparkles } from "lucide-react-native";
+import { useMemo, useState } from "react";
+import { Alert, Pressable, View } from "react-native";
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("pt-BR");
+function formatTime(date: string) {
+  return new Date(date).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function AIScreen() {
-  const [message, setMessage] = useState("");
-
   const reports = useAIStore((state) => state.reports);
   const messages = useAIStore((state) => state.messages);
-  const latestReport = useAIStore((state) => state.getLatestReport());
+  const isGeneratingReport = useAIStore((state) => state.isGeneratingReport);
+  const isSendingMessage = useAIStore((state) => state.isSendingMessage);
   const generateReport = useAIStore((state) => state.generateReport);
   const sendMessage = useAIStore((state) => state.sendMessage);
   const clearMessages = useAIStore((state) => state.clearMessages);
-  const isGeneratingReport = useAIStore((state) => state.isGeneratingReport);
-  const isSendingMessage = useAIStore((state) => state.isSendingMessage);
+
   const awardAction = useGamificationStore((state) => state.awardAction);
+
+  const [message, setMessage] = useState("");
+
+  const latestReport = useMemo(() => {
+    return reports[0] ?? null;
+  }, [reports]);
+
+  const recentReports = useMemo(() => {
+    return reports.slice(0, 3);
+  }, [reports]);
 
   async function handleGenerateReport() {
     try {
       await generateReport();
       awardAction("ai_report_generated");
       scheduleSafeAutoSync();
-      Alert.alert("Relatório gerado", "A Kairos AI analisou seu dia.");
-    } catch (error) {
-      Alert.alert(
-        "Erro na IA",
-        error instanceof Error ? error.message : "Não foi possível gerar o relatório."
-      );
+
+      Alert.alert("Relatório gerado", "A Kairos AI analisou seus dados e criou um novo relatório.");
+    } catch {
+      Alert.alert("Erro", "Não foi possível gerar o relatório agora.");
     }
   }
 
   async function handleSendMessage() {
-    const text = message.trim();
+    const trimmedMessage = message.trim();
 
-    if (!text) return;
+    if (!trimmedMessage) {
+      return;
+    }
 
     setMessage("");
 
-    try {
-      await sendMessage(text);
-    } catch (error) {
-      Alert.alert(
-        "Erro na IA",
-        error instanceof Error ? error.message : "Não foi possível enviar sua mensagem."
-      );
-    }
+    await sendMessage(trimmedMessage);
   }
 
   return (
     <KairosScreen>
-      <KairosHeader title="Kairos AI" subtitle="Seu guia pessoal de performance." />
+      <KairosHeader
+        title="Kairos AI"
+        subtitle="Sua inteligência de evolução diária para alimentação, treino, sono e progresso."
+      />
 
       <KairosCard variant="purple" style={{ marginTop: 28 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -74,148 +81,198 @@ export default function AIScreen() {
               Relatório diário
             </KairosText>
 
-            <KairosText variant="body" style={{ fontSize: 22, fontWeight: "900", marginTop: 8 }}>
-              Análise do seu dia
+            <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+              A Kairos cruza seus dados atuais e gera um plano de ação para hoje.
             </KairosText>
           </View>
         </View>
-
-        <KairosText variant="subtitle" style={{ marginTop: 14 }}>
-          A Kairos AI cruza alimentação, água, treino, sono e progresso para sugerir o próximo ajuste certo.
-        </KairosText>
 
         <KairosButton
           style={{ marginTop: 18 }}
           loading={isGeneratingReport}
           onPress={handleGenerateReport}
         >
-          Gerar relatório de hoje
+          {isGeneratingReport ? "Gerando análise..." : "Gerar relatório com IA"}
         </KairosButton>
+
+        {latestReport ? (
+          <KairosButton
+            variant="secondary"
+            style={{ marginTop: 10 }}
+            onPress={() => router.push(`/ai/report?id=${latestReport.id}`)}
+          >
+            Ver último relatório
+          </KairosButton>
+        ) : null}
       </KairosCard>
 
       {latestReport ? (
-        <KairosCard variant="gold" style={{ marginTop: 14 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Sparkles color={colors.gold} size={24} />
+        <Pressable
+          onPress={() => router.push(`/ai/report?id=${latestReport.id}`)}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.82 : 1,
+          })}
+        >
+          <KairosCard variant="gold" style={{ marginTop: 14 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Sparkles color={colors.gold} size={24} />
 
-            <View style={{ flex: 1 }}>
-              <KairosText variant="label" color={colors.gold}>
-                Último relatório
-              </KairosText>
+              <View style={{ flex: 1 }}>
+                <KairosText variant="label" color={colors.gold}>
+                  Último relatório
+                </KairosText>
 
-              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                {formatDate(latestReport.createdAt)}
-              </KairosText>
+                <KairosText variant="body" style={{ fontSize: 22, fontWeight: "900", marginTop: 8 }}>
+                  {latestReport.title}
+                </KairosText>
+
+                <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+                  {latestReport.summary}
+                </KairosText>
+
+                <KairosText variant="body" color={colors.gold} style={{ marginTop: 10, fontWeight: "900" }}>
+                  Próxima ação: {latestReport.nextAction}
+                </KairosText>
+              </View>
+
+              <View style={{ alignItems: "center" }}>
+                <KairosText variant="metric">{latestReport.consistencyScore}</KairosText>
+                <KairosText variant="subtitle">score</KairosText>
+              </View>
             </View>
-
-            <KairosText variant="body" color={colors.gold} style={{ fontSize: 24, fontWeight: "900" }}>
-              {latestReport.consistencyScore}
-            </KairosText>
-          </View>
-
-          <KairosText variant="body" style={{ fontWeight: "900", marginTop: 16 }}>
-            {latestReport.title}
-          </KairosText>
-
-          <KairosText variant="subtitle" style={{ marginTop: 8 }}>
-            {latestReport.summary}
-          </KairosText>
-
-          <KairosButton
-            variant="secondary"
-            style={{ marginTop: 18 }}
-            onPress={() => router.push("/ai/report")}
-          >
-            Ver relatório completo
-          </KairosButton>
-        </KairosCard>
+          </KairosCard>
+        </Pressable>
       ) : null}
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 28 }}>
         <KairosText variant="label" color={colors.gold}>
-          Chat com IA
+          Histórico
         </KairosText>
 
-        <KairosText variant="subtitle">
-          {messages.length} mensagens
-        </KairosText>
+        <KairosText variant="subtitle">{reports.length} relatórios</KairosText>
       </View>
+
+      <KairosButton
+        variant="secondary"
+        style={{ marginTop: 14 }}
+        onPress={() => router.push("/ai/history")}
+      >
+        Abrir histórico de relatórios
+      </KairosButton>
+
+      {recentReports.length > 0 ? (
+        <View style={{ gap: 12, marginTop: 14 }}>
+          {recentReports.map((report) => (
+            <Pressable
+              key={report.id}
+              onPress={() => router.push(`/ai/report?id=${report.id}`)}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.82 : 1,
+              })}
+            >
+              <KairosCard style={{ borderRadius: 18 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <KairosText variant="body" style={{ fontWeight: "900" }}>
+                      {report.title}
+                    </KairosText>
+
+                    <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                      {report.nextAction}
+                    </KairosText>
+                  </View>
+
+                  <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
+                    {report.consistencyScore}
+                  </KairosText>
+                </View>
+              </KairosCard>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
+      <KairosText variant="label" color={colors.purple} style={{ marginTop: 28 }}>
+        Chat Kairos
+      </KairosText>
+
+      <KairosCard style={{ marginTop: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <MessageCircle color={colors.purple} size={22} />
+
+          <View style={{ flex: 1 }}>
+            <KairosText variant="body" style={{ fontWeight: "900" }}>
+              Converse com a Kairos
+            </KairosText>
+
+            <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+              Pergunte sobre peso, proteína, água, sono ou progresso.
+            </KairosText>
+          </View>
+        </View>
+      </KairosCard>
 
       <View style={{ gap: 12, marginTop: 14 }}>
-        {messages.map((item) => {
-          const isUser = item.role === "user";
-
-          return (
-            <KairosCard
-              key={item.id}
-              variant={isUser ? "gold" : "purple"}
+        {messages.map((item) => (
+          <View
+            key={item.id}
+            style={{
+              alignItems: item.role === "user" ? "flex-end" : "flex-start",
+            }}
+          >
+            <View
               style={{
-                borderRadius: 18,
-                marginLeft: isUser ? 40 : 0,
-                marginRight: isUser ? 0 : 40,
+                maxWidth: "88%",
+                borderRadius: 20,
+                padding: 14,
+                backgroundColor:
+                  item.role === "user" ? "rgba(214,168,79,0.18)" : "rgba(255,255,255,0.06)",
+                borderWidth: 1,
+                borderColor: item.role === "user" ? colors.borderGold : colors.border,
               }}
             >
-              <KairosText variant="label" color={isUser ? colors.gold : colors.purple}>
-                {isUser ? "Você" : "Kairos AI"}
-              </KairosText>
-
-              <KairosText variant="body" style={{ marginTop: 8 }}>
+              <KairosText
+                variant="body"
+                color={item.role === "user" ? colors.gold : colors.white}
+                style={{ fontWeight: item.role === "user" ? "900" : "500" }}
+              >
                 {item.content}
               </KairosText>
-            </KairosCard>
-          );
-        })}
+
+              <KairosText variant="subtitle" style={{ marginTop: 6, fontSize: 11 }}>
+                {formatTime(item.createdAt)}
+              </KairosText>
+            </View>
+          </View>
+        ))}
       </View>
 
-      <View style={{ marginTop: 18 }}>
+      <View style={{ gap: 12, marginTop: 18 }}>
         <KairosInput
-          label="Pergunte para a Kairos AI"
-          placeholder="Ex: por que meu peso travou?"
+          label="Mensagem"
+          placeholder="Ex: como está minha proteína hoje?"
           value={message}
           onChangeText={setMessage}
           multiline
-          style={{ minHeight: 92, textAlignVertical: "top" }}
+          style={{ minHeight: 90, textAlignVertical: "top" }}
         />
 
-        <KairosButton
-          style={{ marginTop: 12 }}
-          loading={isSendingMessage}
-          onPress={handleSendMessage}
-        >
+        <KairosButton loading={isSendingMessage} onPress={handleSendMessage}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Send color={colors.background} size={18} />
+
             <KairosText variant="body" color={colors.background} style={{ fontWeight: "900" }}>
-              Enviar
+              {isSendingMessage ? "Respondendo..." : "Enviar mensagem"}
             </KairosText>
           </View>
         </KairosButton>
 
-        <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={clearMessages}>
+        <KairosButton variant="ghost" onPress={clearMessages}>
           Limpar conversa
         </KairosButton>
       </View>
 
-      {reports.length > 1 ? (
-        <>
-          <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
-            Histórico de relatórios
-          </KairosText>
-
-          <View style={{ gap: 12, marginTop: 14 }}>
-            {reports.slice(1, 5).map((report) => (
-              <KairosCard key={report.id} style={{ borderRadius: 18 }}>
-                <KairosText variant="body" style={{ fontWeight: "900" }}>
-                  {report.title}
-                </KairosText>
-
-                <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                  {formatDate(report.createdAt)} • Score {report.consistencyScore}
-                </KairosText>
-              </KairosCard>
-            ))}
-          </View>
-        </>
-      ) : null}
+      <View style={{ height: 12 }} />
     </KairosScreen>
   );
 }

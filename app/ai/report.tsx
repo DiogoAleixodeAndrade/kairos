@@ -4,20 +4,25 @@ import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosText } from "@/components/ui/KairosText";
 import { useAIStore } from "@/stores/ai.store";
 import { colors } from "@/styles/theme";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("pt-BR");
+  return new Date(date).toLocaleString("pt-BR");
 }
 
 export default function AIReportScreen() {
+  const params = useLocalSearchParams<{ id?: string }>();
   const reports = useAIStore((state) => state.reports);
 
   const report = useMemo(() => {
+    if (params.id) {
+      return reports.find((item) => item.id === params.id) ?? null;
+    }
+
     return reports[0] ?? null;
-  }, [reports]);
+  }, [params.id, reports]);
 
   if (!report) {
     return (

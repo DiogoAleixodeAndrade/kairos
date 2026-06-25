@@ -177,8 +177,15 @@ export default function MealDetailsScreen() {
       ) : null}
 
       <KairosButton
-        variant="secondary"
         style={{ marginTop: 28 }}
+        onPress={() => router.push(`/meal/edit/${meal.id}`)}
+      >
+        Editar refeição
+      </KairosButton>
+
+      <KairosButton
+        variant="secondary"
+        style={{ marginTop: 10 }}
         onPress={() => router.back()}
       >
         Voltar

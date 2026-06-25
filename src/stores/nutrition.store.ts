@@ -19,6 +19,7 @@ type NutritionState = {
   removeMeal: (mealId: string) => void;
   addWater: (amountMl: number) => void;
   clearTodayWater: () => void;
+  updateMeal: (mealId: string, meal: Omit<Meal, "id">) => void;
   getTodayMeals: () => Meal[];
   getTodayWaterLogs: () => WaterLog[];
   getTodaySummary: () => NutritionSummary;
@@ -121,6 +122,22 @@ export const useNutritionStore = create<NutritionState>()(
       removeMeal: (mealId) =>
         set((state) => ({
           meals: state.meals.filter((meal) => meal.id !== mealId),
+        })),
+
+      updateMeal: (mealId, meal) =>
+        set((state) => ({
+          meals: state.meals.map((item) =>
+            item.id === mealId
+              ? {
+                  ...meal,
+                  id: mealId,
+                  items: meal.items.map((mealItem) => ({
+                    ...mealItem,
+                    id: mealItem.id || createId(),
+                  })),
+                }
+              : item,
+          ),
         })),
 
       addWater: (amountMl) =>

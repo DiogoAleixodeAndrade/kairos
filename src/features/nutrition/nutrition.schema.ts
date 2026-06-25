@@ -11,4 +11,9 @@ export const addMealSchema = z.object({
   fatG: z.string().min(1, "Digite as gorduras."),
 });
 
+export const estimateMealSchema = z.object({
+  description: z.string().min(3, "Descreva o que você comeu."),
+});
+
 export type AddMealFormData = z.infer<typeof addMealSchema>;
+export type EstimateMealFormData = z.infer<typeof estimateMealSchema>;

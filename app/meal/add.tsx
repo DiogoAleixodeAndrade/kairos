@@ -1,18 +1,24 @@
 import { KairosScreen } from "@/components/layout/KairosScreen";
 import { KairosButton } from "@/components/ui/KairosButton";
+import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosOptionCard } from "@/components/ui/KairosOptionCard";
 import { KairosText } from "@/components/ui/KairosText";
+import { estimateMealFromText } from "@/features/nutrition/nutrition-estimator.service";
 import { addMealSchema, type AddMealFormData } from "@/features/nutrition/nutrition.schema";
 import type { MealType } from "@/features/nutrition/nutrition.types";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+import { useGamificationStore } from "@/stores/gamification.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { colors } from "@/styles/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
+import { Brain, Pencil } from "lucide-react-native";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
-import { useGamificationStore } from "@/stores/gamification.store";
-import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+
+type AddMealMode = "ai" | "manual";
 
 const mealOptions: { value: MealType; title: string; description: string }[] = [
   {
@@ -54,10 +60,18 @@ function toNumber(value: string) {
   return Number.isFinite(number) ? number : 0;
 }
 
+function getMealTitleByType(mealType: MealType) {
+  const option = mealOptions.find((item) => item.value === mealType);
+
+  return option?.title ?? "Refeição";
+}
+
 export default function AddMealScreen() {
   const addMeal = useNutritionStore((state) => state.addMeal);
-
   const awardAction = useGamificationStore((state) => state.awardAction);
+
+  const [mode, setMode] = useState<AddMealMode>("ai");
+  const [description, setDescription] = useState("");
 
   const {
     control,
@@ -68,7 +82,7 @@ export default function AddMealScreen() {
   } = useForm<AddMealFormData>({
     resolver: zodResolver(addMealSchema),
     defaultValues: {
-      title: "",
+      title: "Almoço",
       mealType: "lunch",
       foodName: "",
       quantityG: "",
@@ -80,6 +94,34 @@ export default function AddMealScreen() {
   });
 
   const selectedMealType = watch("mealType");
+  const calories = toNumber(watch("caloriesKcal") || "0");
+  const protein = toNumber(watch("proteinG") || "0");
+  const carbs = toNumber(watch("carbsG") || "0");
+  const fat = toNumber(watch("fatG") || "0");
+
+  function handleEstimateMeal() {
+    const trimmedDescription = description.trim();
+
+    if (trimmedDescription.length < 3) {
+      Alert.alert("Descrição incompleta", "Descreva o que você comeu.");
+      return;
+    }
+
+    const estimated = estimateMealFromText(trimmedDescription);
+
+    setValue("title", getMealTitleByType(selectedMealType));
+    setValue("foodName", estimated.foodName);
+    setValue("quantityG", String(Math.round(estimated.quantityG)));
+    setValue("caloriesKcal", String(Math.round(estimated.caloriesKcal)));
+    setValue("proteinG", String(Math.round(estimated.proteinG)));
+    setValue("carbsG", String(Math.round(estimated.carbsG)));
+    setValue("fatG", String(Math.round(estimated.fatG)));
+
+    Alert.alert(
+      "Estimativa gerada",
+      "A Kairos estimou os macros. Revise os dados antes de salvar."
+    );
+  }
 
   function onSubmit(data: AddMealFormData) {
     const caloriesKcal = toNumber(data.caloriesKcal);
@@ -124,8 +166,93 @@ export default function AddMealScreen() {
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 10 }}>
-        Registre a refeição para atualizar calorias, macros e relatório diário da IA.
+        Descreva sua refeição para a Kairos estimar calorias e macros ou preencha tudo manualmente.
       </KairosText>
+
+      <View style={{ flexDirection: "row", gap: 12, marginTop: 28 }}>
+        <KairosButton
+          variant={mode === "ai" ? "primary" : "secondary"}
+          style={{ flex: 1 }}
+          onPress={() => setMode("ai")}
+        >
+          IA rápida
+        </KairosButton>
+
+        <KairosButton
+          variant={mode === "manual" ? "primary" : "secondary"}
+          style={{ flex: 1 }}
+          onPress={() => setMode("manual")}
+        >
+          Manual
+        </KairosButton>
+      </View>
+
+      {mode === "ai" ? (
+        <KairosCard variant="purple" style={{ marginTop: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Brain color={colors.purple} size={24} />
+
+            <View style={{ flex: 1 }}>
+              <KairosText variant="label" color={colors.purple}>
+                Estimativa inteligente
+              </KairosText>
+
+              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                Exemplo: 2 pães com ovo e queijo.
+              </KairosText>
+            </View>
+          </View>
+
+          <KairosInput
+            label="Descreva a refeição"
+            placeholder="Ex: 2 pães com 2 ovos e queijo"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            style={{ minHeight: 90, textAlignVertical: "top" }}
+            containerStyle={{ marginTop: 16 }}
+          />
+
+          <KairosButton style={{ marginTop: 14 }} onPress={handleEstimateMeal}>
+            Estimar calorias e macros
+          </KairosButton>
+        </KairosCard>
+      ) : (
+        <KairosCard variant="gold" style={{ marginTop: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Pencil color={colors.gold} size={24} />
+
+            <View style={{ flex: 1 }}>
+              <KairosText variant="label" color={colors.gold}>
+                Cadastro manual
+              </KairosText>
+
+              <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                Preencha os dados nutricionais com precisão.
+              </KairosText>
+            </View>
+          </View>
+        </KairosCard>
+      )}
+
+      <KairosText variant="label" color={colors.gold} style={{ marginTop: 28 }}>
+        Tipo de refeição
+      </KairosText>
+
+      <View style={{ gap: 10, marginTop: 14 }}>
+        {mealOptions.map((option) => (
+          <KairosOptionCard
+            key={option.value}
+            title={option.title}
+            description={option.description}
+            selected={selectedMealType === option.value}
+            onPress={() => {
+              setValue("mealType", option.value);
+              setValue("title", option.title);
+            }}
+          />
+        ))}
+      </View>
 
       <View style={{ gap: 14, marginTop: 28 }}>
         <Controller
@@ -141,22 +268,6 @@ export default function AddMealScreen() {
             />
           )}
         />
-
-        <KairosText variant="label" color={colors.gold} style={{ marginTop: 6 }}>
-          Tipo de refeição
-        </KairosText>
-
-        <View style={{ gap: 10 }}>
-          {mealOptions.map((option) => (
-            <KairosOptionCard
-              key={option.value}
-              title={option.title}
-              description={option.description}
-              selected={selectedMealType === option.value}
-              onPress={() => setValue("mealType", option.value)}
-            />
-          ))}
-        </View>
 
         <Controller
           control={control}
@@ -187,6 +298,21 @@ export default function AddMealScreen() {
           )}
         />
 
+        <KairosCard style={{ borderRadius: 18 }}>
+          <KairosText variant="label" color={colors.gold}>
+            Prévia nutricional
+          </KairosText>
+
+          <KairosText variant="metric" style={{ marginTop: 12 }}>
+            {Math.round(calories)} kcal
+          </KairosText>
+
+          <KairosText variant="subtitle" style={{ marginTop: 6 }}>
+            Proteína {Math.round(protein)}g • Carbo {Math.round(carbs)}g • Gordura{" "}
+            {Math.round(fat)}g
+          </KairosText>
+        </KairosCard>
+
         <Controller
           control={control}
           name="caloriesKcal"
@@ -214,7 +340,6 @@ export default function AddMealScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.proteinG?.message}
-                style={{ minWidth: 0 }}
               />
             )}
           />
@@ -230,7 +355,6 @@ export default function AddMealScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.carbsG?.message}
-                style={{ minWidth: 0 }}
               />
             )}
           />
@@ -246,7 +370,6 @@ export default function AddMealScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.fatG?.message}
-                style={{ minWidth: 0 }}
               />
             )}
           />

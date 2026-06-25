@@ -168,14 +168,17 @@ export const useNutritionStore = create<NutritionState>()(
             proteinG: 0,
             carbsG: 0,
             fatG: 0,
-            waterMl: todayWaterLogs.reduce((total, log) => total + log.amountMl, 0),
-          }
+            waterMl: todayWaterLogs.reduce(
+              (total, log) => total + log.amountMl,
+              0,
+            ),
+          },
         );
       },
     }),
     {
       name: "kairos-nutrition-store",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

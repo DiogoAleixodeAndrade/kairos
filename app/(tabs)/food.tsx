@@ -5,13 +5,13 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosText } from "@/components/ui/KairosText";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+import { useGamificationStore } from "@/stores/gamification.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
 import { Droplets, Plus } from "lucide-react-native";
-import { View } from "react-native";
-import { useGamificationStore } from "@/stores/gamification.store";
-import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+import { Pressable, View } from "react-native";
 
 const mealTypeLabels = {
   breakfast: "Café da manhã",
@@ -53,13 +53,7 @@ export default function FoodScreen() {
       />
 
       <KairosCard variant="gold" style={{ marginTop: 28 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
+        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 16 }}>
           <View style={{ flex: 1 }}>
             <KairosText variant="label" color={colors.gold}>
               Calorias
@@ -69,9 +63,7 @@ export default function FoodScreen() {
               {Math.round(summary.caloriesKcal)}
             </KairosText>
 
-            <KairosText variant="subtitle">
-              de {targets.caloriesKcal} kcal
-            </KairosText>
+            <KairosText variant="subtitle">de {targets.caloriesKcal} kcal</KairosText>
           </View>
 
           <View
@@ -144,10 +136,7 @@ export default function FoodScreen() {
               Água
             </KairosText>
 
-            <KairosText
-              variant="body"
-              style={{ fontSize: 26, fontWeight: "900", marginTop: 4 }}
-            >
+            <KairosText variant="body" style={{ fontSize: 26, fontWeight: "900", marginTop: 4 }}>
               {waterLiters.toFixed(1)}L / {waterTargetLiters.toFixed(1)}L
             </KairosText>
           </View>
@@ -165,31 +154,17 @@ export default function FoodScreen() {
             +250ml
           </KairosButton>
 
-          <KairosButton
-            style={{ flex: 1 }}
-            variant="secondary"
-            onPress={() => handleAddWater(500)}
-          >
+          <KairosButton style={{ flex: 1 }} variant="secondary" onPress={() => handleAddWater(500)}>
             +500ml
           </KairosButton>
         </View>
 
-        <KairosButton
-          variant="ghost"
-          style={{ marginTop: 8 }}
-          onPress={clearTodayWater}
-        >
+        <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={clearTodayWater}>
           Zerar água de hoje
         </KairosButton>
       </KairosCard>
 
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginTop: 28,
-        }}
-      >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 28 }}>
         <KairosText variant="label" color={colors.gold}>
           Refeições
         </KairosText>
@@ -197,17 +172,11 @@ export default function FoodScreen() {
         <KairosText variant="subtitle">{meals.length} hoje</KairosText>
       </View>
 
-      <KairosButton
-        style={{ marginTop: 14 }}
-        onPress={() => router.push("/meal/add")}
-      >
+      <KairosButton style={{ marginTop: 14 }} onPress={() => router.push("/meal/add")}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Plus color={colors.background} size={18} />
-          <KairosText
-            variant="body"
-            color={colors.background}
-            style={{ fontWeight: "900" }}
-          >
+
+          <KairosText variant="body" color={colors.background} style={{ fontWeight: "900" }}>
             Adicionar refeição
           </KairosText>
         </View>
@@ -221,50 +190,48 @@ export default function FoodScreen() {
             </KairosText>
 
             <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-              Adicione sua primeira refeição para a Kairos AI analisar seus
-              macros.
+              Adicione sua primeira refeição para a Kairos AI analisar seus macros.
             </KairosText>
           </KairosCard>
         ) : (
           meals.map((meal) => {
-            const calories = meal.items.reduce(
-              (total, item) => total + item.caloriesKcal,
-              0,
-            );
-            const protein = meal.items.reduce(
-              (total, item) => total + item.proteinG,
-              0,
-            );
+            const calories = meal.items.reduce((total, item) => total + item.caloriesKcal, 0);
+            const protein = meal.items.reduce((total, item) => total + item.proteinG, 0);
+            const carbs = meal.items.reduce((total, item) => total + item.carbsG, 0);
+            const fat = meal.items.reduce((total, item) => total + item.fatG, 0);
 
             return (
-              <KairosCard key={meal.id} style={{ borderRadius: 18 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    gap: 12,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <KairosText variant="body" style={{ fontWeight: "900" }}>
-                      {meal.title}
-                    </KairosText>
+              <Pressable
+                key={meal.id}
+                onPress={() => router.push(`/meal/${meal.id}`)}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.82 : 1,
+                })}
+              >
+                <KairosCard style={{ borderRadius: 18 }}>
+                  <View
+                    style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <KairosText variant="body" style={{ fontWeight: "900" }}>
+                        {meal.title}
+                      </KairosText>
 
-                    <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                      {mealTypeLabels[meal.mealType]} • {Math.round(protein)}g
-                      proteína
+                      <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                        {mealTypeLabels[meal.mealType]} • {Math.round(protein)}g proteína
+                      </KairosText>
+
+                      <KairosText variant="subtitle" style={{ marginTop: 4 }}>
+                        Carbo {Math.round(carbs)}g • Gordura {Math.round(fat)}g
+                      </KairosText>
+                    </View>
+
+                    <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
+                      {Math.round(calories)} kcal
                     </KairosText>
                   </View>
-
-                  <KairosText
-                    variant="body"
-                    color={colors.gold}
-                    style={{ fontWeight: "900" }}
-                  >
-                    {Math.round(calories)} kcal
-                  </KairosText>
-                </View>
-              </KairosCard>
+                </KairosCard>
+              </Pressable>
             );
           })
         )}

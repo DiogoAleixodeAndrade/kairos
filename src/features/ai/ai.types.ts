@@ -46,14 +46,16 @@ export type DailyAIContext = {
 
 export type DailyAIReport = {
   id: string;
-  reportDate: string;
+  createdAt: string;
   title: string;
   summary: string;
-  positives: string[];
-  attentionPoints: string[];
   recommendation: string;
+  nutritionFeedback: string;
+  trainingFeedback: string;
+  sleepFeedback: string;
+  progressFeedback: string;
+  nextAction: string;
   consistencyScore: number;
-  createdAt: string;
 };
 
 export type AIMessageRole = "user" | "assistant";

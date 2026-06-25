@@ -1,4 +1,18 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+type KairosAIRequest = {
+  context: unknown;
+};
+
+type KairosAIReport = {
+  title: string;
+  summary: string;
+  recommendation: string;
+  nutritionFeedback: string;
+  trainingFeedback: string;
+  sleepFeedback: string;
+  progressFeedback: string;
+  nextAction: string;
+  consistencyScore: number;
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,162 +20,186 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function extractOutputText(payload: any) {
-  if (typeof payload.output_text === "string") {
-    return payload.output_text;
-  }
-
-  const output = payload.output;
-
-  if (!Array.isArray(output)) {
-    return "";
-  }
-
-  return output
-    .flatMap((item) => item.content ?? [])
-    .map((contentItem) => contentItem.text ?? "")
-    .filter(Boolean)
-    .join("\n")
-    .trim();
+function createJsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+function extractJsonFromText(text: string) {
+  const cleaned = text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+
+  if (start === -1 || end === -1) {
+    throw new Error("Resposta sem JSON válido.");
+  }
+
+  return cleaned.slice(start, end + 1);
+}
+
+function sanitizeReport(value: Partial<KairosAIReport>): KairosAIReport {
+  const score = Number(value.consistencyScore || 0);
+
+  return {
+    title: String(value.title || "Relatório Kairos"),
+    summary: String(value.summary || "A Kairos analisou seus dados do dia."),
+    recommendation: String(value.recommendation || "Mantenha constância e registre seus dados hoje."),
+    nutritionFeedback: String(value.nutritionFeedback || "Continue registrando suas refeições."),
+    trainingFeedback: String(value.trainingFeedback || "Mantenha sua rotina de treino alinhada ao objetivo."),
+    sleepFeedback: String(value.sleepFeedback || "Priorize recuperação e qualidade do sono."),
+    progressFeedback: String(value.progressFeedback || "Acompanhe seu peso e medidas com consistência."),
+    nextAction: String(value.nextAction || "Registre sua próxima refeição ou treino."),
+    consistencyScore: Math.max(0, Math.min(100, Math.round(score))),
+  };
+}
+
+Deno.serve(async (request: Request) => {
+  if (request.method === "OPTIONS") {
     return new Response("ok", {
       headers: corsHeaders,
     });
   }
 
+  if (request.method !== "POST") {
+    return createJsonResponse(
+      {
+        error: "Método não permitido.",
+      },
+      405
+    );
+  }
+
   try {
-    const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
-    const model = Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini";
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    const geminiModel = Deno.env.get("GEMINI_MODEL") || "gemini-1.5-flash";
 
-    if (!openAiApiKey) {
-      return new Response(
-        JSON.stringify({
-          error: "OPENAI_API_KEY não configurada.",
-        }),
+    if (!geminiApiKey) {
+      return createJsonResponse(
         {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+          error: "GEMINI_API_KEY não configurada no Supabase.",
+        },
+        500
       );
     }
 
-    const body = await req.json();
-    const { type, prompt } = body;
+    const body = (await request.json()) as KairosAIRequest;
 
-    if (!type || !prompt) {
-      return new Response(
-        JSON.stringify({
-          error: "Payload inválido.",
-        }),
+    if (!body.context) {
+      return createJsonResponse(
         {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+          error: "Contexto do usuário não enviado.",
+        },
+        400
       );
     }
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const prompt = `
+Você é a Kairos AI, uma inteligência de evolução pessoal, alimentação, treino, sono e progresso físico.
+
+Analise os dados do usuário abaixo e gere um relatório diário em português do Brasil.
+
+Contexto do usuário:
+${JSON.stringify(body.context, null, 2)}
+
+Retorne somente JSON válido neste formato exato:
+
+{
+  "title": "título curto do relatório",
+  "summary": "resumo geral do dia",
+  "recommendation": "recomendação principal",
+  "nutritionFeedback": "feedback sobre alimentação, calorias, macros e água",
+  "trainingFeedback": "feedback sobre treino e atividade física",
+  "sleepFeedback": "feedback sobre sono e recuperação",
+  "progressFeedback": "feedback sobre peso, medidas, evolução e consistência",
+  "nextAction": "uma ação prática para o usuário fazer agora",
+  "consistencyScore": 0
+}
+
+Regras:
+- O consistencyScore deve ir de 0 a 100.
+- Seja direto, motivador e premium.
+- Não invente dados que não estejam no contexto.
+- Se algum dado estiver vazio, diga que precisa ser registrado.
+- Não responda com markdown.
+- Não responda com texto fora do JSON.
+- Use tom profissional, humano e encorajador.
+`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+
+    const response = await fetch(geminiUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${openAiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model,
-        input: [
-          {
-            role: "system",
-            content:
-              "Você é a Kairos AI, uma IA premium de evolução humana. Responda em português do Brasil, com tom direto, elegante e profissional.",
-          },
+        contents: [
           {
             role: "user",
-            content: prompt,
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
           },
         ],
+        generationConfig: {
+          temperature: 0.3,
+          responseMimeType: "application/json",
+        },
       }),
     });
 
-    const result = await response.json();
-
     if (!response.ok) {
-      return new Response(
-        JSON.stringify({
-          error: result.error?.message ?? "Erro ao chamar OpenAI.",
-        }),
+      const errorText = await response.text();
+
+      return createJsonResponse(
         {
-          status: response.status,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    const outputText = extractOutputText(result);
-
-    if (type === "daily_report") {
-      let report;
-
-      try {
-        report = JSON.parse(outputText);
-      } catch {
-        report = {
-          title: "Relatório Kairos — Hoje",
-          summary: outputText,
-          positives: ["A Kairos AI gerou uma análise inicial."],
-          attentionPoints: ["Não foi possível estruturar todos os pontos automaticamente."],
-          recommendation: "Revise os dados do dia e tente gerar o relatório novamente.",
-          consistencyScore: 70,
-        };
-      }
-
-      return new Response(
-        JSON.stringify({
-          report,
-        }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        message: outputText,
-      }),
-      {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
+          error: "Erro ao chamar a Gemini API.",
+          details: errorText,
         },
-      }
-    );
+        500
+      );
+    }
+
+    const data = await response.json();
+
+    const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    if (!outputText) {
+      return createJsonResponse(
+        {
+          error: "A Gemini API não retornou relatório válido.",
+        },
+        500
+      );
+    }
+
+    const jsonText = extractJsonFromText(outputText);
+    const parsed = JSON.parse(jsonText) as Partial<KairosAIReport>;
+    const report = sanitizeReport(parsed);
+
+    return createJsonResponse({
+      report,
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Erro inesperado.",
-      }),
+    return createJsonResponse(
       {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      }
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erro inesperado ao gerar relatório Kairos.",
+      },
+      500
     );
   }
 });

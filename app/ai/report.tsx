@@ -5,6 +5,7 @@ import { KairosText } from "@/components/ui/KairosText";
 import { useAIStore } from "@/stores/ai.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { View } from "react-native";
 
 function formatDate(date: string) {
@@ -12,7 +13,11 @@ function formatDate(date: string) {
 }
 
 export default function AIReportScreen() {
-  const report = useAIStore((state) => state.getLatestReport());
+  const reports = useAIStore((state) => state.reports);
+
+  const report = useMemo(() => {
+    return reports[0] ?? null;
+  }, [reports]);
 
   if (!report) {
     return (
@@ -70,45 +75,69 @@ export default function AIReportScreen() {
 
       <KairosCard variant="purple" style={{ marginTop: 14 }}>
         <KairosText variant="label" color={colors.purple}>
-          Pontos positivos
+          Recomendação principal
         </KairosText>
 
-        <View style={{ gap: 10, marginTop: 12 }}>
-          {report.positives.map((item) => (
-            <KairosText key={item} variant="body">
-              • {item}
-            </KairosText>
-          ))}
-        </View>
-      </KairosCard>
-
-      <KairosCard style={{ marginTop: 14 }}>
-        <KairosText variant="label" color={colors.gold}>
-          Pontos de atenção
+        <KairosText variant="body" style={{ marginTop: 12 }}>
+          {report.recommendation}
         </KairosText>
-
-        <View style={{ gap: 10, marginTop: 12 }}>
-          {report.attentionPoints.map((item) => (
-            <KairosText key={item} variant="body">
-              • {item}
-            </KairosText>
-          ))}
-        </View>
       </KairosCard>
 
       <KairosCard variant="gold" style={{ marginTop: 14 }}>
         <KairosText variant="label" color={colors.gold}>
-          Ação recomendada
+          Alimentação
+        </KairosText>
+
+        <KairosText variant="body" style={{ marginTop: 12 }}>
+          {report.nutritionFeedback}
+        </KairosText>
+      </KairosCard>
+
+      <KairosCard style={{ marginTop: 14 }}>
+        <KairosText variant="label" color={colors.purple}>
+          Treino
+        </KairosText>
+
+        <KairosText variant="body" style={{ marginTop: 12 }}>
+          {report.trainingFeedback}
+        </KairosText>
+      </KairosCard>
+
+      <KairosCard style={{ marginTop: 14 }}>
+        <KairosText variant="label" color={colors.blue}>
+          Sono
+        </KairosText>
+
+        <KairosText variant="body" style={{ marginTop: 12 }}>
+          {report.sleepFeedback}
+        </KairosText>
+      </KairosCard>
+
+      <KairosCard style={{ marginTop: 14 }}>
+        <KairosText variant="label" color={colors.gold}>
+          Progresso
+        </KairosText>
+
+        <KairosText variant="body" style={{ marginTop: 12 }}>
+          {report.progressFeedback}
+        </KairosText>
+      </KairosCard>
+
+      <KairosCard variant="gold" style={{ marginTop: 14 }}>
+        <KairosText variant="label" color={colors.gold}>
+          Próxima ação
         </KairosText>
 
         <KairosText variant="body" style={{ marginTop: 12, fontWeight: "900" }}>
-          {report.recommendation}
+          {report.nextAction}
         </KairosText>
       </KairosCard>
 
       <KairosButton style={{ marginTop: 28 }} onPress={() => router.back()}>
         Voltar
       </KairosButton>
+
+      <View style={{ height: 12 }} />
     </KairosScreen>
   );
 }

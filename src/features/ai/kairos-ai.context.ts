@@ -1,71 +1,73 @@
-import type { DailyAIContext } from "@/features/ai/ai.types";
+import { useAIStore } from "@/stores/ai.store";
+import { useGamificationStore } from "@/stores/gamification.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
+import { useProfileStore } from "@/stores/profile.store";
 import { useProgressStore } from "@/stores/progress.store";
 import { useSleepStore } from "@/stores/sleep.store";
 import { useTrainingStore } from "@/stores/training.store";
 
-export function buildDailyAIContext(): DailyAIContext {
-  const nutritionStore = useNutritionStore.getState();
-  const trainingStore = useTrainingStore.getState();
-  const sleepStore = useSleepStore.getState();
-  const progressStore = useProgressStore.getState();
+export function buildKairosAIContext() {
+  const profile = useProfileStore.getState();
+  const nutrition = useNutritionStore.getState();
+  const training = useTrainingStore.getState();
+  const sleep = useSleepStore.getState();
+  const progress = useProgressStore.getState();
+  const gamification = useGamificationStore.getState();
+  const ai = useAIStore.getState();
 
-  const nutritionSummary = nutritionStore.getTodaySummary();
-  const nutritionTargets = nutritionStore.targets;
-
-  const todayWorkout = trainingStore.getTodayWorkout();
-  const completedThisWeek = trainingStore.getCompletedWorkoutsThisWeek();
-
-  const sleepSummary = sleepStore.getSleepSummary();
-  const progressSummary = progressStore.getSummary();
+  const todayNutrition = nutrition.getTodaySummary();
+  const todayMeals = nutrition.getTodayMeals();
+  const todayWorkout = training.getTodayWorkout();
+  const completedWorkoutsThisWeek = training.getCompletedWorkoutsThisWeek();
+  const sleepSummary = sleep.getSleepSummary();
+  const progressSummary = progress.getSummary();
+  const levelInfo = gamification.getLevelInfo();
 
   return {
-    date: new Date().toISOString(),
-
-    user: {
-      name: "Diogo",
+    profile: {
+      displayName: profile.displayName,
+      age: profile.age,
+      heightCm: profile.heightCm,
+      objective: profile.objective,
+      activityLevel: profile.activityLevel,
+      autoRecalculateNutritionTargets: profile.autoRecalculateNutritionTargets,
     },
 
     nutrition: {
-      caloriesKcal: Math.round(nutritionSummary.caloriesKcal),
-      caloriesTargetKcal: nutritionTargets.caloriesKcal,
-
-      proteinG: Math.round(nutritionSummary.proteinG),
-      proteinTargetG: nutritionTargets.proteinG,
-
-      carbsG: Math.round(nutritionSummary.carbsG),
-      carbsTargetG: nutritionTargets.carbsG,
-
-      fatG: Math.round(nutritionSummary.fatG),
-      fatTargetG: nutritionTargets.fatG,
-
-      waterMl: nutritionSummary.waterMl,
-      waterTargetMl: nutritionTargets.waterMl,
+      targets: nutrition.targets,
+      todaySummary: todayNutrition,
+      todayMeals,
     },
 
     training: {
-      workoutTitle: todayWorkout?.title ?? null,
-      workoutCompleted: todayWorkout?.status === "completed",
-      durationMinutes: todayWorkout?.durationMinutes ?? 0,
-      estimatedCalories: todayWorkout?.estimatedCalories ?? 0,
-      completedThisWeek,
+      todayWorkout,
+      completedWorkoutsThisWeek,
+      sessions: training.sessions.slice(0, 10),
     },
 
     sleep: {
-      durationMinutes: sleepSummary.durationMinutes,
-      durationText: sleepSummary.durationText,
-      qualityScore: sleepSummary.qualityScore,
-      energyScore: sleepSummary.energyScore,
-      interruptions: sleepSummary.interruptions,
+      summary: sleepSummary,
+      recentLogs: sleep.sleepLogs.slice(0, 7),
     },
 
     progress: {
-      startWeightKg: progressSummary.startWeightKg,
-      currentWeightKg: progressSummary.currentWeightKg,
-      targetWeightKg: progressSummary.targetWeightKg,
-      lostWeightKg: progressSummary.lostWeightKg,
-      remainingWeightKg: progressSummary.remainingWeightKg,
-      progressPercentage: progressSummary.progressPercentage,
+      summary: progressSummary,
+      recentWeights: progress.weightLogs.slice(0, 10),
+      recentMeasurements: progress.measurements.slice(0, 5),
+      recentPhotosCount: progress.photos.length,
     },
+
+    gamification: {
+      totalXp: gamification.totalXp,
+      levelInfo,
+      unlockedAchievements: gamification.unlockedAchievements,
+      recentXpLogs: gamification.xpLogs.slice(0, 10),
+    },
+
+    ai: {
+      previousReports: ai.reports.slice(0, 3),
+    },
+
+    generatedAt: new Date().toISOString(),
   };
 }

@@ -14,7 +14,13 @@ import { useGamificationStore } from "@/stores/gamification.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { colors } from "@/styles/theme";
 import { router } from "expo-router";
-import { BarChart3, Droplets, Plus, TrendingUp } from "lucide-react-native";
+import {
+  BarChart3,
+  CalendarDays,
+  Droplets,
+  Plus,
+  TrendingUp,
+} from "lucide-react-native";
 import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 
@@ -76,7 +82,13 @@ export default function FoodScreen() {
       />
 
       <KairosCard variant="gold" style={{ marginTop: 28 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 16 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            gap: 16,
+          }}
+        >
           <View style={{ flex: 1 }}>
             <KairosText variant="label" color={colors.gold}>
               Calorias
@@ -86,7 +98,9 @@ export default function FoodScreen() {
               {Math.round(summary.caloriesKcal)}
             </KairosText>
 
-            <KairosText variant="subtitle">de {targets.caloriesKcal} kcal</KairosText>
+            <KairosText variant="subtitle">
+              de {targets.caloriesKcal} kcal
+            </KairosText>
           </View>
 
           <View
@@ -159,7 +173,10 @@ export default function FoodScreen() {
               Água
             </KairosText>
 
-            <KairosText variant="body" style={{ fontSize: 26, fontWeight: "900", marginTop: 4 }}>
+            <KairosText
+              variant="body"
+              style={{ fontSize: 26, fontWeight: "900", marginTop: 4 }}
+            >
               {waterLiters.toFixed(1)}L / {waterTargetLiters.toFixed(1)}L
             </KairosText>
           </View>
@@ -177,7 +194,11 @@ export default function FoodScreen() {
             +250ml
           </KairosButton>
 
-          <KairosButton style={{ flex: 1 }} variant="secondary" onPress={() => handleAddWater(500)}>
+          <KairosButton
+            style={{ flex: 1 }}
+            variant="secondary"
+            onPress={() => handleAddWater(500)}
+          >
             +500ml
           </KairosButton>
         </View>
@@ -193,6 +214,24 @@ export default function FoodScreen() {
           Zerar água de hoje
         </KairosButton>
       </KairosCard>
+
+      <KairosButton
+        variant="secondary"
+        style={{ marginTop: 18 }}
+        onPress={() => router.push("/food/history")}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <CalendarDays color={colors.white} size={18} />
+
+          <KairosText
+            variant="body"
+            color={colors.white}
+            style={{ fontWeight: "900" }}
+          >
+            Abrir histórico alimentar
+          </KairosText>
+        </View>
+      </KairosButton>
 
       <KairosCard variant="purple" style={{ marginTop: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -213,7 +252,10 @@ export default function FoodScreen() {
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Média kcal</KairosText>
 
-            <KairosText variant="body" style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}>
+            <KairosText
+              variant="body"
+              style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}
+            >
               {weeklyAnalytics.averageCalories}
             </KairosText>
           </View>
@@ -221,7 +263,10 @@ export default function FoodScreen() {
           <View style={{ flex: 1 }}>
             <KairosText variant="subtitle">Média proteína</KairosText>
 
-            <KairosText variant="body" style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}>
+            <KairosText
+              variant="body"
+              style={{ fontSize: 24, fontWeight: "900", marginTop: 4 }}
+            >
               {weeklyAnalytics.averageProtein}g
             </KairosText>
           </View>
@@ -231,7 +276,9 @@ export default function FoodScreen() {
           {weeklyDays.map((day) => {
             const percentage = Math.max(
               4,
-              Math.round((day.caloriesKcal / weeklyAnalytics.maxCalories) * 100)
+              Math.round(
+                (day.caloriesKcal / weeklyAnalytics.maxCalories) * 100,
+              ),
             );
 
             return (
@@ -243,11 +290,16 @@ export default function FoodScreen() {
                     marginBottom: 6,
                   }}
                 >
-                  <KairosText variant="subtitle" style={{ textTransform: "capitalize" }}>
+                  <KairosText
+                    variant="subtitle"
+                    style={{ textTransform: "capitalize" }}
+                  >
                     {day.label}
                   </KairosText>
 
-                  <KairosText variant="subtitle">{Math.round(day.caloriesKcal)} kcal</KairosText>
+                  <KairosText variant="subtitle">
+                    {Math.round(day.caloriesKcal)} kcal
+                  </KairosText>
                 </View>
 
                 <View
@@ -283,7 +335,8 @@ export default function FoodScreen() {
             </KairosText>
 
             <KairosText variant="body" style={{ marginTop: 8 }}>
-              Sua média dos últimos 7 dias foi de {weeklyAnalytics.averageCalories} kcal e{" "}
+              Sua média dos últimos 7 dias foi de{" "}
+              {weeklyAnalytics.averageCalories} kcal e{" "}
               {weeklyAnalytics.averageProtein}g de proteína por dia.
             </KairosText>
 
@@ -295,7 +348,13 @@ export default function FoodScreen() {
         </View>
       </KairosCard>
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 28 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginTop: 28,
+        }}
+      >
         <KairosText variant="label" color={colors.gold}>
           Refeições
         </KairosText>
@@ -303,11 +362,18 @@ export default function FoodScreen() {
         <KairosText variant="subtitle">{meals.length} hoje</KairosText>
       </View>
 
-      <KairosButton style={{ marginTop: 14 }} onPress={() => router.push("/meal/add")}>
+      <KairosButton
+        style={{ marginTop: 14 }}
+        onPress={() => router.push("/meal/add")}
+      >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Plus color={colors.background} size={18} />
 
-          <KairosText variant="body" color={colors.background} style={{ fontWeight: "900" }}>
+          <KairosText
+            variant="body"
+            color={colors.background}
+            style={{ fontWeight: "900" }}
+          >
             Adicionar refeição
           </KairosText>
         </View>
@@ -321,15 +387,28 @@ export default function FoodScreen() {
             </KairosText>
 
             <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-              Adicione sua primeira refeição para a Kairos AI analisar seus macros.
+              Adicione sua primeira refeição para a Kairos AI analisar seus
+              macros.
             </KairosText>
           </KairosCard>
         ) : (
           meals.map((meal) => {
-            const calories = meal.items.reduce((total, item) => total + item.caloriesKcal, 0);
-            const protein = meal.items.reduce((total, item) => total + item.proteinG, 0);
-            const carbs = meal.items.reduce((total, item) => total + item.carbsG, 0);
-            const fat = meal.items.reduce((total, item) => total + item.fatG, 0);
+            const calories = meal.items.reduce(
+              (total, item) => total + item.caloriesKcal,
+              0,
+            );
+            const protein = meal.items.reduce(
+              (total, item) => total + item.proteinG,
+              0,
+            );
+            const carbs = meal.items.reduce(
+              (total, item) => total + item.carbsG,
+              0,
+            );
+            const fat = meal.items.reduce(
+              (total, item) => total + item.fatG,
+              0,
+            );
 
             return (
               <Pressable
@@ -341,7 +420,11 @@ export default function FoodScreen() {
               >
                 <KairosCard style={{ borderRadius: 18 }}>
                   <View
-                    style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
                   >
                     <View style={{ flex: 1 }}>
                       <KairosText variant="body" style={{ fontWeight: "900" }}>
@@ -349,7 +432,8 @@ export default function FoodScreen() {
                       </KairosText>
 
                       <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                        {mealTypeLabels[meal.mealType]} • {Math.round(protein)}g proteína
+                        {mealTypeLabels[meal.mealType]} • {Math.round(protein)}g
+                        proteína
                       </KairosText>
 
                       <KairosText variant="subtitle" style={{ marginTop: 4 }}>
@@ -357,7 +441,11 @@ export default function FoodScreen() {
                       </KairosText>
                     </View>
 
-                    <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
+                    <KairosText
+                      variant="body"
+                      color={colors.gold}
+                      style={{ fontWeight: "900" }}
+                    >
                       {Math.round(calories)} kcal
                     </KairosText>
                   </View>

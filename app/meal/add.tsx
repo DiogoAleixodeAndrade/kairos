@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 const mealOptions: { value: MealType; title: string; description: string }[] = [
   {
@@ -107,6 +108,7 @@ export default function AddMealScreen() {
     });
 
     awardAction("meal_logged");
+    scheduleSafeAutoSync();
 
     router.back();
   }

@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 function toNumber(value: string) {
   const normalized = value.replace(",", ".");
@@ -56,6 +57,7 @@ export default function WeightScreen() {
     });
 
     awardAction("weight_logged");
+    scheduleSafeAutoSync();
 
     router.back();
   }

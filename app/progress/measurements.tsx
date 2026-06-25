@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 function toOptionalNumber(value?: string) {
   if (!value) return undefined;
@@ -68,6 +69,7 @@ export default function MeasurementsScreen() {
     });
 
     awardAction("measurement_logged");
+    scheduleSafeAutoSync();
 
     router.back();
   }

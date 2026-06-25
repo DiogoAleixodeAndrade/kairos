@@ -155,8 +155,7 @@ export default function ProfileScreen() {
         </KairosText>
 
         <KairosText variant="subtitle" style={{ marginTop: 8 }}>
-          Salve e restaure seus dados reais na nuvem. Funciona apenas com
-          usuário logado.
+          Salve e restaure seus dados reais na nuvem. O app também tenta sincronizar automaticamente após ações importantes quando você está logado.
         </KairosText>
 
         {lastSyncedAt ? (

@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -80,6 +81,7 @@ export default function WorkoutLogScreen() {
     completeTodayWorkout();
 
     awardAction("workout_completed");
+    scheduleSafeAutoSync();
 
     Alert.alert("Treino concluído", "Seu treino foi registrado com sucesso.");
     router.back();

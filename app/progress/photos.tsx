@@ -11,6 +11,7 @@ import { Camera } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, Image, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 const photoTypes: { value: ProgressPhotoType; title: string; description: string }[] = [
   {
@@ -80,6 +81,7 @@ export default function PhotosScreen() {
     }
 
     awardAction("photo_logged");
+    scheduleSafeAutoSync();
 
     addPhoto({
       uri,

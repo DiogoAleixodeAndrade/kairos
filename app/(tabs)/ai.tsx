@@ -11,6 +11,7 @@ import { Brain, Send, Sparkles } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("pt-BR");
@@ -33,6 +34,7 @@ export default function AIScreen() {
     try {
       await generateReport();
       awardAction("ai_report_generated");
+      scheduleSafeAutoSync();
       Alert.alert("Relatório gerado", "A Kairos AI analisou seu dia.");
     } catch (error) {
       Alert.alert(

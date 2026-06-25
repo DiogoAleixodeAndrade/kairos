@@ -57,7 +57,7 @@ function extractJsonFromText(text: string) {
   return cleaned.slice(start, end + 1);
 }
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", {
       headers: corsHeaders,

@@ -25,13 +25,15 @@ export default function NutritionGoalsScreen() {
   const setTargets = useNutritionStore((state) => state.setTargets);
 
   const autoRecalculateNutritionTargets = useProfileStore(
-    (state) => state.autoRecalculateNutritionTargets
+    (state) => state.autoRecalculateNutritionTargets,
   );
   const setAutoRecalculateNutritionTargets = useProfileStore(
-    (state) => state.setAutoRecalculateNutritionTargets
+    (state) => state.setAutoRecalculateNutritionTargets,
   );
 
-  const [caloriesKcal, setCaloriesKcal] = useState(String(targets.caloriesKcal));
+  const [caloriesKcal, setCaloriesKcal] = useState(
+    String(targets.caloriesKcal),
+  );
   const [proteinG, setProteinG] = useState(String(targets.proteinG));
   const [carbsG, setCarbsG] = useState(String(targets.carbsG));
   const [fatG, setFatG] = useState(String(targets.fatG));
@@ -87,8 +89,8 @@ export default function NutritionGoalsScreen() {
             </KairosText>
 
             <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-              P {Math.round(previewProtein)}g • C {Math.round(previewCarbs)}g • G{" "}
-              {Math.round(previewFat)}g
+              P {Math.round(previewProtein)}g • C {Math.round(previewCarbs)}g •
+              G {Math.round(previewFat)}g
             </KairosText>
 
             <KairosText variant="subtitle" style={{ marginTop: 4 }}>
@@ -99,30 +101,38 @@ export default function NutritionGoalsScreen() {
       </KairosCard>
 
       <KairosCard variant="blue" style={{ marginTop: 14 }}>
-  <KairosText variant="label" color={colors.blue}>
-    Recálculo automático
-  </KairosText>
+        <KairosText variant="label" color={colors.blue}>
+          Recálculo automático
+        </KairosText>
 
-  <KairosText variant="subtitle" style={{ marginTop: 8 }}>
-    Quando você registrar um novo peso, a Kairos pode recalcular automaticamente suas metas de
-    calorias, macros e água.
-  </KairosText>
+        <KairosText variant="subtitle" style={{ marginTop: 8 }}>
+          Quando você registrar um novo peso, a Kairos pode recalcular
+          automaticamente suas metas de calorias, macros e água.
+        </KairosText>
 
-  <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
-    Status: {autoRecalculateNutritionTargets ? "ativado" : "desativado"}
-  </KairosText>
+        <KairosText
+          variant="body"
+          color={colors.blue}
+          style={{ marginTop: 10, fontWeight: "900" }}
+        >
+          Status: {autoRecalculateNutritionTargets ? "ativado" : "desativado"}
+        </KairosText>
 
-  <KairosButton
-    variant="secondary"
-    style={{ marginTop: 16 }}
-    onPress={() => {
-      setAutoRecalculateNutritionTargets(!autoRecalculateNutritionTargets);
-      scheduleSafeAutoSync();
-    }}
-  >
-    {autoRecalculateNutritionTargets ? "Desativar recálculo" : "Ativar recálculo"}
-  </KairosButton>
-</KairosCard>
+        <KairosButton
+          variant="secondary"
+          style={{ marginTop: 16 }}
+          onPress={() => {
+            setAutoRecalculateNutritionTargets(
+              !autoRecalculateNutritionTargets,
+            );
+            scheduleSafeAutoSync();
+          }}
+        >
+          {autoRecalculateNutritionTargets
+            ? "Desativar recálculo"
+            : "Ativar recálculo"}
+        </KairosButton>
+      </KairosCard>
 
       <View style={{ gap: 14, marginTop: 24 }}>
         <KairosInput
@@ -170,7 +180,11 @@ export default function NutritionGoalsScreen() {
         Salvar metas
       </KairosButton>
 
-      <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={() => router.back()}>
+      <KairosButton
+        variant="ghost"
+        style={{ marginTop: 8 }}
+        onPress={() => router.back()}
+      >
         Cancelar
       </KairosButton>
     </KairosScreen>

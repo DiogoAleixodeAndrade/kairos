@@ -1,13 +1,23 @@
 import type { AIMessage, DailyAIReport } from "@/features/ai/ai.types";
-import type { UserAchievement, XPLog } from "@/features/gamification/gamification.types";
-import type { NutritionTargets, Meal, WaterLog } from "@/features/nutrition/nutrition.types";
+import type {
+  UserAchievement,
+  XPLog,
+} from "@/features/gamification/gamification.types";
+import type {
+  NutritionTargets,
+  Meal,
+  WaterLog,
+} from "@/features/nutrition/nutrition.types";
 import type {
   BodyMeasurement,
   ProgressPhoto,
   WeightLog,
 } from "@/features/progress/progress.types";
 import type { SleepLog } from "@/features/sleep/sleep.types";
-import type { Workout, WorkoutSession } from "@/features/training/training.types";
+import type {
+  Workout,
+  WorkoutSession,
+} from "@/features/training/training.types";
 import type {
   ActivityLevel,
   NutritionObjective,

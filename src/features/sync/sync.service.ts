@@ -1,4 +1,7 @@
-import type { AppSyncSnapshotRow, KairosSyncPayload } from "@/features/sync/sync.types";
+import type {
+  AppSyncSnapshotRow,
+  KairosSyncPayload,
+} from "@/features/sync/sync.types";
 import { supabase } from "@/lib/supabase";
 import { useAIStore } from "@/stores/ai.store";
 import { useGamificationStore } from "@/stores/gamification.store";
@@ -16,7 +19,9 @@ async function getAuthenticatedUserId() {
   }
 
   if (!data.user?.id) {
-    throw new Error("Você precisa estar logado para sincronizar com o Supabase.");
+    throw new Error(
+      "Você precisa estar logado para sincronizar com o Supabase.",
+    );
   }
 
   return data.user.id;
@@ -88,7 +93,8 @@ export function applyKairosSyncPayload(payload: KairosSyncPayload) {
       heightCm: payload.profile.heightCm,
       objective: payload.profile.objective,
       activityLevel: payload.profile.activityLevel,
-      autoRecalculateNutritionTargets: payload.profile.autoRecalculateNutritionTargets,
+      autoRecalculateNutritionTargets:
+        payload.profile.autoRecalculateNutritionTargets,
     });
   }
 
@@ -141,7 +147,7 @@ export async function syncLocalDataToSupabase() {
     },
     {
       onConflict: "user_id",
-    }
+    },
   );
 
   if (error) {

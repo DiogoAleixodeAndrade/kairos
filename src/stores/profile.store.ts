@@ -86,6 +86,6 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: "kairos-profile-store",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

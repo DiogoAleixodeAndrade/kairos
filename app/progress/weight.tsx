@@ -3,7 +3,10 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosText } from "@/components/ui/KairosText";
-import { addWeightSchema, type AddWeightFormData } from "@/features/progress/progress.schema";
+import {
+  addWeightSchema,
+  type AddWeightFormData,
+} from "@/features/progress/progress.schema";
 import { useProgressStore } from "@/stores/progress.store";
 import { colors } from "@/styles/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,16 +57,16 @@ export default function WeightScreen() {
 
     const currentWeightKg = toNumber(data.weightKg);
 
-addWeightLog({
-  weightKg: currentWeightKg,
-  notes: data.notes?.trim(),
-});
+    addWeightLog({
+      weightKg: currentWeightKg,
+      notes: data.notes?.trim(),
+    });
 
-awardAction("weight_logged");
-recalculateNutritionTargetsFromWeight(currentWeightKg);
-scheduleSafeAutoSync();
+    awardAction("weight_logged");
+    recalculateNutritionTargetsFromWeight(currentWeightKg);
+    scheduleSafeAutoSync();
 
-router.back();
+    router.back();
   }
 
   return (
@@ -77,7 +80,8 @@ router.back();
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 10 }}>
-        O Kairos usa seu peso para calcular evolução, tendência e ajustes inteligentes.
+        O Kairos usa seu peso para calcular evolução, tendência e ajustes
+        inteligentes.
       </KairosText>
 
       <View style={{ gap: 14, marginTop: 28 }}>
@@ -117,7 +121,11 @@ router.back();
         Salvar peso
       </KairosButton>
 
-      <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={() => router.back()}>
+      <KairosButton
+        variant="ghost"
+        style={{ marginTop: 8 }}
+        onPress={() => router.back()}
+      >
         Cancelar
       </KairosButton>
 
@@ -128,7 +136,13 @@ router.back();
       <View style={{ gap: 12, marginTop: 14 }}>
         {weightLogs.slice(0, 8).map((log) => (
           <KairosCard key={log.id} style={{ borderRadius: 18 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
               <View style={{ flex: 1 }}>
                 <KairosText variant="body" style={{ fontWeight: "900" }}>
                   {log.weightKg.toFixed(1)} kg
@@ -140,7 +154,10 @@ router.back();
               </View>
 
               {log.notes ? (
-                <KairosText variant="subtitle" style={{ maxWidth: 150, textAlign: "right" }}>
+                <KairosText
+                  variant="subtitle"
+                  style={{ maxWidth: 150, textAlign: "right" }}
+                >
                   {log.notes}
                 </KairosText>
               ) : null}

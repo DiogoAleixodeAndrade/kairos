@@ -8,10 +8,23 @@ import type {
 } from "@/features/progress/progress.types";
 import type { SleepLog } from "@/features/sleep/sleep.types";
 import type { Workout, WorkoutSession } from "@/features/training/training.types";
+import type {
+  ActivityLevel,
+  NutritionObjective,
+} from "@/features/nutrition/nutrition-goals.service";
 
 export type KairosSyncPayload = {
   version: 1;
   syncedAt: string;
+
+  profile: {
+    displayName: string;
+    age: number;
+    heightCm: number;
+    objective: NutritionObjective;
+    activityLevel: ActivityLevel;
+    autoRecalculateNutritionTargets: boolean;
+  };
 
   nutrition: {
     targets: NutritionTargets;

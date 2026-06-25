@@ -30,7 +30,8 @@ const objectiveOptions: {
   {
     value: "cut",
     title: "Emagrecer",
-    description: "Déficit calórico com proteína alta para preservar massa magra.",
+    description:
+      "Déficit calórico com proteína alta para preservar massa magra.",
   },
   {
     value: "maintain",
@@ -83,7 +84,10 @@ function toNumber(value: string) {
   return Number.isFinite(number) ? number : 0;
 }
 
-function getDefaultTargetWeight(currentWeightKg: number, objective: NutritionObjective) {
+function getDefaultTargetWeight(
+  currentWeightKg: number,
+  objective: NutritionObjective,
+) {
   if (objective === "cut") {
     return Math.max(40, currentWeightKg * 0.9);
   }
@@ -99,8 +103,15 @@ export default function OnboardingStepOneScreen() {
   const onboarding = useOnboardingStore();
 
   const setDisplayName = useProfileStore((state) => state.setDisplayName);
-  const completeOnboarding = useProfileStore((state) => state.completeOnboarding);
-  const setJourneyWeights = useProgressStore((state) => state.setJourneyWeights);
+  const setNutritionProfile = useProfileStore(
+    (state) => state.setNutritionProfile,
+  );
+  const completeOnboarding = useProfileStore(
+    (state) => state.completeOnboarding,
+  );
+  const setJourneyWeights = useProgressStore(
+    (state) => state.setJourneyWeights,
+  );
   const setTargets = useNutritionStore((state) => state.setTargets);
 
   const {
@@ -128,6 +139,13 @@ export default function OnboardingStepOneScreen() {
     onboarding.setPhysicalData(data);
     setDisplayName(data.name);
 
+    setNutritionProfile({
+      age: toNumber(data.age),
+      heightCm: toNumber(data.heightCm),
+      objective: data.objective,
+      activityLevel: data.activityLevel,
+    });
+
     const currentWeightKg = toNumber(data.currentWeightKg);
 
     const targets = calculateNutritionTargets({
@@ -145,7 +163,10 @@ export default function OnboardingStepOneScreen() {
       return;
     }
 
-    const targetWeightKg = getDefaultTargetWeight(currentWeightKg, data.objective);
+    const targetWeightKg = getDefaultTargetWeight(
+      currentWeightKg,
+      data.objective,
+    );
 
     setJourneyWeights({
       startWeightKg: currentWeightKg,
@@ -171,7 +192,8 @@ export default function OnboardingStepOneScreen() {
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 10 }}>
-        Esses dados ajudam a Kairos AI a calcular suas metas iniciais de calorias, macros e água.
+        Esses dados ajudam a Kairos AI a calcular suas metas iniciais de
+        calorias, macros e água.
       </KairosText>
 
       <View style={{ gap: 14, marginTop: 28 }}>

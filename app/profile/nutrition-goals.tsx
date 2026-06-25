@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { Target } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, View } from "react-native";
+import { useProfileStore } from "@/stores/profile.store";
 
 function toNumber(value: string) {
   const normalized = value.replace(",", ".");
@@ -22,6 +23,13 @@ function toNumber(value: string) {
 export default function NutritionGoalsScreen() {
   const targets = useNutritionStore((state) => state.targets);
   const setTargets = useNutritionStore((state) => state.setTargets);
+
+  const autoRecalculateNutritionTargets = useProfileStore(
+    (state) => state.autoRecalculateNutritionTargets
+  );
+  const setAutoRecalculateNutritionTargets = useProfileStore(
+    (state) => state.setAutoRecalculateNutritionTargets
+  );
 
   const [caloriesKcal, setCaloriesKcal] = useState(String(targets.caloriesKcal));
   const [proteinG, setProteinG] = useState(String(targets.proteinG));
@@ -48,6 +56,8 @@ export default function NutritionGoalsScreen() {
       fatG: Math.round(previewFat),
       waterMl: Math.round(previewWater),
     });
+
+    setAutoRecalculateNutritionTargets(false);
 
     scheduleSafeAutoSync();
 
@@ -87,6 +97,32 @@ export default function NutritionGoalsScreen() {
           </View>
         </View>
       </KairosCard>
+
+      <KairosCard variant="blue" style={{ marginTop: 14 }}>
+  <KairosText variant="label" color={colors.blue}>
+    Recálculo automático
+  </KairosText>
+
+  <KairosText variant="subtitle" style={{ marginTop: 8 }}>
+    Quando você registrar um novo peso, a Kairos pode recalcular automaticamente suas metas de
+    calorias, macros e água.
+  </KairosText>
+
+  <KairosText variant="body" color={colors.blue} style={{ marginTop: 10, fontWeight: "900" }}>
+    Status: {autoRecalculateNutritionTargets ? "ativado" : "desativado"}
+  </KairosText>
+
+  <KairosButton
+    variant="secondary"
+    style={{ marginTop: 16 }}
+    onPress={() => {
+      setAutoRecalculateNutritionTargets(!autoRecalculateNutritionTargets);
+      scheduleSafeAutoSync();
+    }}
+  >
+    {autoRecalculateNutritionTargets ? "Desativar recálculo" : "Ativar recálculo"}
+  </KairosButton>
+</KairosCard>
 
       <View style={{ gap: 14, marginTop: 24 }}>
         <KairosInput

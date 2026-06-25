@@ -6,6 +6,7 @@ import { useNutritionStore } from "@/stores/nutrition.store";
 import { useProgressStore } from "@/stores/progress.store";
 import { useSleepStore } from "@/stores/sleep.store";
 import { useTrainingStore } from "@/stores/training.store";
+import { useProfileStore } from "@/stores/profile.store";
 
 async function getAuthenticatedUserId() {
   const { data, error } = await supabase.auth.getUser();
@@ -28,10 +29,20 @@ export function buildKairosSyncPayload(): KairosSyncPayload {
   const progress = useProgressStore.getState();
   const ai = useAIStore.getState();
   const gamification = useGamificationStore.getState();
+  const profile = useProfileStore.getState();
 
   return {
     version: 1,
     syncedAt: new Date().toISOString(),
+
+    profile: {
+      displayName: profile.displayName,
+      age: profile.age,
+      heightCm: profile.heightCm,
+      objective: profile.objective,
+      activityLevel: profile.activityLevel,
+      autoRecalculateNutritionTargets: profile.autoRecalculateNutritionTargets,
+    },
 
     nutrition: {
       targets: nutrition.targets,
@@ -70,6 +81,17 @@ export function buildKairosSyncPayload(): KairosSyncPayload {
 }
 
 export function applyKairosSyncPayload(payload: KairosSyncPayload) {
+  if (payload.profile) {
+    useProfileStore.setState({
+      displayName: payload.profile.displayName,
+      age: payload.profile.age,
+      heightCm: payload.profile.heightCm,
+      objective: payload.profile.objective,
+      activityLevel: payload.profile.activityLevel,
+      autoRecalculateNutritionTargets: payload.profile.autoRecalculateNutritionTargets,
+    });
+  }
+
   useNutritionStore.setState({
     targets: payload.nutrition.targets,
     meals: payload.nutrition.meals,

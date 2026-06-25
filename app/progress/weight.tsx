@@ -12,6 +12,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Alert, View } from "react-native";
 import { useGamificationStore } from "@/stores/gamification.store";
 import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
+import { recalculateNutritionTargetsFromWeight } from "@/features/nutrition/nutrition-recalculation.service";
 
 function toNumber(value: string) {
   const normalized = value.replace(",", ".");
@@ -51,15 +52,18 @@ export default function WeightScreen() {
       return;
     }
 
-    addWeightLog({
-      weightKg,
-      notes: data.notes,
-    });
+    const currentWeightKg = toNumber(data.weightKg);
 
-    awardAction("weight_logged");
-    scheduleSafeAutoSync();
+addWeightLog({
+  weightKg: currentWeightKg,
+  notes: data.notes?.trim(),
+});
 
-    router.back();
+awardAction("weight_logged");
+recalculateNutritionTargetsFromWeight(currentWeightKg);
+scheduleSafeAutoSync();
+
+router.back();
   }
 
   return (

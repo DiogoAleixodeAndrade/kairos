@@ -4,8 +4,12 @@ import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosInput } from "@/components/ui/KairosInput";
 import { KairosOptionCard } from "@/components/ui/KairosOptionCard";
 import { KairosText } from "@/components/ui/KairosText";
+import { estimateMealWithAI } from "@/features/nutrition/meal-ai.service";
 import { estimateMealFromText } from "@/features/nutrition/nutrition-estimator.service";
-import { addMealSchema, type AddMealFormData } from "@/features/nutrition/nutrition.schema";
+import {
+  addMealSchema,
+  type AddMealFormData,
+} from "@/features/nutrition/nutrition.schema";
 import type { MealType } from "@/features/nutrition/nutrition.types";
 import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 import { useGamificationStore } from "@/stores/gamification.store";
@@ -72,6 +76,7 @@ export default function AddMealScreen() {
 
   const [mode, setMode] = useState<AddMealMode>("ai");
   const [description, setDescription] = useState("");
+  const [isEstimating, setIsEstimating] = useState(false);
 
   const {
     control,
@@ -99,7 +104,7 @@ export default function AddMealScreen() {
   const carbs = toNumber(watch("carbsG") || "0");
   const fat = toNumber(watch("fatG") || "0");
 
-  function handleEstimateMeal() {
+  async function handleEstimateMeal() {
     const trimmedDescription = description.trim();
 
     if (trimmedDescription.length < 3) {
@@ -107,20 +112,43 @@ export default function AddMealScreen() {
       return;
     }
 
-    const estimated = estimateMealFromText(trimmedDescription);
+    setIsEstimating(true);
 
-    setValue("title", getMealTitleByType(selectedMealType));
-    setValue("foodName", estimated.foodName);
-    setValue("quantityG", String(Math.round(estimated.quantityG)));
-    setValue("caloriesKcal", String(Math.round(estimated.caloriesKcal)));
-    setValue("proteinG", String(Math.round(estimated.proteinG)));
-    setValue("carbsG", String(Math.round(estimated.carbsG)));
-    setValue("fatG", String(Math.round(estimated.fatG)));
+    try {
+      const estimated = await estimateMealWithAI(trimmedDescription);
 
-    Alert.alert(
-      "Estimativa gerada",
-      "A Kairos estimou os macros. Revise os dados antes de salvar."
-    );
+      setValue("title", getMealTitleByType(selectedMealType));
+      setValue("foodName", estimated.foodName);
+      setValue("quantityG", String(Math.round(estimated.quantityG)));
+      setValue("caloriesKcal", String(Math.round(estimated.caloriesKcal)));
+      setValue("proteinG", String(Math.round(estimated.proteinG)));
+      setValue("carbsG", String(Math.round(estimated.carbsG)));
+      setValue("fatG", String(Math.round(estimated.fatG)));
+
+      Alert.alert(
+        "Estimativa gerada pela IA",
+        "A Kairos estimou os macros com Gemini API. Revise os dados antes de salvar.",
+      );
+    } catch (error) {
+      console.warn("Erro na Gemini API, usando estimativa local:", error);
+
+      const estimated = estimateMealFromText(trimmedDescription);
+
+      setValue("title", getMealTitleByType(selectedMealType));
+      setValue("foodName", estimated.foodName);
+      setValue("quantityG", String(Math.round(estimated.quantityG)));
+      setValue("caloriesKcal", String(Math.round(estimated.caloriesKcal)));
+      setValue("proteinG", String(Math.round(estimated.proteinG)));
+      setValue("carbsG", String(Math.round(estimated.carbsG)));
+      setValue("fatG", String(Math.round(estimated.fatG)));
+
+      Alert.alert(
+        "Estimativa local gerada",
+        "A Gemini API não respondeu agora, então a Kairos usou uma estimativa local. Revise antes de salvar.",
+      );
+    } finally {
+      setIsEstimating(false);
+    }
   }
 
   function onSubmit(data: AddMealFormData) {
@@ -128,7 +156,10 @@ export default function AddMealScreen() {
     const quantityG = toNumber(data.quantityG);
 
     if (caloriesKcal <= 0 || quantityG <= 0) {
-      Alert.alert("Dados inválidos", "Confira a quantidade e as calorias da refeição.");
+      Alert.alert(
+        "Dados inválidos",
+        "Confira a quantidade e as calorias da refeição.",
+      );
       return;
     }
 
@@ -166,7 +197,8 @@ export default function AddMealScreen() {
       </KairosText>
 
       <KairosText variant="subtitle" style={{ marginTop: 10 }}>
-        Descreva sua refeição para a Kairos estimar calorias e macros ou preencha tudo manualmente.
+        Descreva sua refeição para a Kairos estimar calorias e macros ou
+        preencha tudo manualmente.
       </KairosText>
 
       <View style={{ flexDirection: "row", gap: 12, marginTop: 28 }}>
@@ -213,8 +245,14 @@ export default function AddMealScreen() {
             containerStyle={{ marginTop: 16 }}
           />
 
-          <KairosButton style={{ marginTop: 14 }} onPress={handleEstimateMeal}>
-            Estimar calorias e macros
+          <KairosButton
+            style={{ marginTop: 14 }}
+            loading={isEstimating}
+            onPress={handleEstimateMeal}
+          >
+            {isEstimating
+              ? "Estimando com Gemini..."
+              : "Estimar calorias e macros"}
           </KairosButton>
         </KairosCard>
       ) : (
@@ -308,8 +346,8 @@ export default function AddMealScreen() {
           </KairosText>
 
           <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-            Proteína {Math.round(protein)}g • Carbo {Math.round(carbs)}g • Gordura{" "}
-            {Math.round(fat)}g
+            Proteína {Math.round(protein)}g • Carbo {Math.round(carbs)}g •
+            Gordura {Math.round(fat)}g
           </KairosText>
         </KairosCard>
 
@@ -380,7 +418,11 @@ export default function AddMealScreen() {
         Salvar refeição
       </KairosButton>
 
-      <KairosButton variant="ghost" style={{ marginTop: 8 }} onPress={() => router.back()}>
+      <KairosButton
+        variant="ghost"
+        style={{ marginTop: 8 }}
+        onPress={() => router.back()}
+      >
         Cancelar
       </KairosButton>
     </KairosScreen>

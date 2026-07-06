@@ -4,6 +4,8 @@ import { generateKairosAIReport } from "@/features/ai/kairos-ai.service";
 import type { AIMessage, DailyAIReport } from "@/features/ai/ai.types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { askKairosChat } from "@/features/ai/kairos-chat.service";
+import { scheduleSafeAutoSync } from "@/features/sync/auto-sync.service";
 
 type AIState = {
   reports: DailyAIReport[];
@@ -112,13 +114,22 @@ export const useAIStore = create<AIState>()(
           createdAt: new Date().toISOString(),
         };
 
+        const historyBeforeQuestion = get().messages;
+
         set((state) => ({
           messages: [...state.messages, userMessage],
           isSendingMessage: true,
         }));
 
         try {
-          const answer = createLocalAIAnswer(trimmedContent);
+          let answer: string;
+
+          try {
+            answer = await askKairosChat(trimmedContent, historyBeforeQuestion);
+          } catch (error) {
+            console.warn("Erro no chat com Gemini, usando resposta local:", error);
+            answer = createLocalAIAnswer(trimmedContent);
+          }
 
           const assistantMessage: AIMessage = {
             id: createId(),
@@ -130,6 +141,8 @@ export const useAIStore = create<AIState>()(
           set((state) => ({
             messages: [...state.messages, assistantMessage],
           }));
+
+          scheduleSafeAutoSync();
         } finally {
           set({ isSendingMessage: false });
         }

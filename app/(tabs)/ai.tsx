@@ -122,7 +122,10 @@ export default function AIScreen() {
                   Último relatório
                 </KairosText>
 
-                <KairosText variant="body" style={{ fontSize: 22, fontWeight: "900", marginTop: 8 }}>
+                <KairosText
+                  variant="body"
+                  style={{ fontSize: 22, fontWeight: "900", marginTop: 8 }}
+                >
                   {latestReport.title}
                 </KairosText>
 
@@ -130,7 +133,11 @@ export default function AIScreen() {
                   {latestReport.summary}
                 </KairosText>
 
-                <KairosText variant="body" color={colors.gold} style={{ marginTop: 10, fontWeight: "900" }}>
+                <KairosText
+                  variant="body"
+                  color={colors.gold}
+                  style={{ marginTop: 10, fontWeight: "900" }}
+                >
                   Próxima ação: {latestReport.nextAction}
                 </KairosText>
               </View>

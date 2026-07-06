@@ -43,3 +43,18 @@ export type WorkoutSession = {
   setLogs: WorkoutSetLog[];
   notes?: string;
 };
+
+// 0 = domingo ... 6 = sábado (mesma base de Date.getDay())
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+// length 7, weekday -> workoutId (ou null se descanso)
+export type WeeklyPlan = (string | null)[];
+
+export type WeeklyTrainingSummary = {
+  sessionsThisWeek: number;
+  totalVolumeKg: number;
+  totalMinutes: number;
+  avgDurationMinutes: number;
+  totalCalories: number;
+  completedSets: number;
+};

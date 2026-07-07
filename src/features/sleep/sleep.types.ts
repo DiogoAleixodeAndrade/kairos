@@ -17,7 +17,7 @@ export type SleepSummary = {
   interruptions: number;
 };
 
-// ===== Etapa 30 — Análise de sono =====
+// ===== Análise de sono =====
 
 export type SleepRange = "7d" | "30d";
 

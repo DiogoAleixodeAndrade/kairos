@@ -1,6 +1,6 @@
-import { syncLocalDataToSupabase } from "@/features/sync/sync.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useProfileStore } from "@/stores/profile.store";
+import { useSyncStore } from "@/stores/sync.store";
 
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -16,16 +16,20 @@ export function scheduleSafeAutoSync() {
     return;
   }
 
+  // marca imediatamente como pendente; se o envio der certo, o flag é limpo
+  useSyncStore.getState().markPendingSync();
+
   if (syncTimeout) {
     clearTimeout(syncTimeout);
   }
 
   syncTimeout = setTimeout(async () => {
     try {
-      await syncLocalDataToSupabase();
+      await useSyncStore.getState().syncNow();
     } catch (error) {
+      // offline ou falha: permanece pendente e será reenviado depois
       console.warn(
-        "Auto sync falhou:",
+        "Auto sync falhou (ficará pendente):",
         error instanceof Error ? error.message : "Erro desconhecido"
       );
     }

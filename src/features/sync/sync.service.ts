@@ -156,6 +156,7 @@ export async function syncLocalDataToSupabase() {
   // O snapshot continua sendo a fonte de verdade do restore.
   try {
     await pushFlatTablesToSupabase(userId);
+    await pushNestedTablesToSupabase(userId);
   } catch (tableError) {
     console.warn(
       "Sync por tabela falhou (snapshot foi salvo normalmente):",

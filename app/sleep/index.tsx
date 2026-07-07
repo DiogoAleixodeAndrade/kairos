@@ -4,12 +4,13 @@ import { KairosButton } from "@/components/ui/KairosButton";
 import { KairosCard } from "@/components/ui/KairosCard";
 import { KairosProgressBar } from "@/components/ui/KairosProgressBar";
 import { KairosText } from "@/components/ui/KairosText";
+import { getSleepAnalytics } from "@/features/sleep/sleep-analytics.service";
 import { useSleepStore } from "@/stores/sleep.store";
-import { colors } from "@/styles/theme";
+import { colors, radius } from "@/styles/theme";
 import { router } from "expo-router";
-import { Moon, Sunrise } from "lucide-react-native";
+import { ChevronRight, Moon, Sunrise } from "lucide-react-native";
 import { useMemo } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 function formatDuration(minutes: number) {
   const hours = Math.floor(minutes / 60);
@@ -47,6 +48,10 @@ export default function SleepScreen() {
 
   const targetMinutes = 450;
 
+  const weeklyAnalytics = useMemo(() => {
+    return getSleepAnalytics("7d");
+  }, [sleepLogs]);
+
   const sleepPercentage =
     targetMinutes > 0
       ? Math.min(100, Math.round((summary.durationMinutes / targetMinutes) * 100))
@@ -54,10 +59,7 @@ export default function SleepScreen() {
 
   return (
     <KairosScreen>
-      <KairosHeader
-        title="Sono"
-        subtitle="Sua recuperação define a qualidade da sua evolução."
-      />
+      <KairosHeader title="Sono" subtitle="Sua recuperação define a qualidade da sua evolução." />
 
       <KairosCard variant="purple" style={{ marginTop: 28 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -85,7 +87,11 @@ export default function SleepScreen() {
           style={{ marginTop: 18 }}
         />
 
-        <KairosText variant="body" color={colors.purple} style={{ marginTop: 8, fontWeight: "900" }}>
+        <KairosText
+          variant="body"
+          color={colors.purple}
+          style={{ marginTop: 8, fontWeight: "900" }}
+        >
           {sleepPercentage}% da meta
         </KairosText>
       </KairosCard>
@@ -118,7 +124,15 @@ export default function SleepScreen() {
 
           <View style={{ flex: 1 }}>
             <KairosText variant="label" color={colors.blue}>
-              Análise rápida
+              Análise da semana
+            </KairosText>
+
+            <KairosText variant="body" style={{ marginTop: 10, lineHeight: 22 }}>
+              {weeklyAnalytics.count > 0
+                ? weeklyAnalytics.insight
+                : summary.durationMinutes >= 420
+                  ? "Seu sono ficou dentro de uma boa faixa. Mantenha a consistência do horário."
+                  : "Seu sono ficou abaixo do ideal. Hoje tente antecipar sua rotina noturna."}
             </KairosText>
 
             <KairosText variant="body" style={{ marginTop: 10 }}>
@@ -142,7 +156,27 @@ export default function SleepScreen() {
         </KairosCard>
       ) : null}
 
-      <KairosButton style={{ marginTop: 28 }} onPress={() => router.push("/sleep/add")}>
+      <Pressable
+        onPress={() => router.push("/sleep/history")}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: 28,
+          padding: 18,
+          borderRadius: radius.lg,
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}
+      >
+        <KairosText variant="body" style={{ fontWeight: "900" }}>
+          Ver histórico e médias
+        </KairosText>
+        <ChevronRight color={colors.muted} size={20} />
+      </Pressable>
+
+      <KairosButton style={{ marginTop: 12 }} onPress={() => router.push("/sleep/add")}>
         Registrar sono
       </KairosButton>
     </KairosScreen>

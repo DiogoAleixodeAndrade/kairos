@@ -7,7 +7,7 @@ import { getWeeklyTrainingSummary } from "@/features/training/training-analytics
 import { useTrainingStore } from "@/stores/training.store";
 import { colors, radius } from "@/styles/theme";
 import { router } from "expo-router";
-import { CheckCircle2, ChevronRight, Dumbbell } from "lucide-react-native";
+import { CheckCircle2, ChevronRight, Dumbbell, Sparkles } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
@@ -105,14 +105,40 @@ export default function TrainingScreen() {
         })}
       </ScrollView>
 
+      <Pressable
+        onPress={() => router.push("/workout/generate")}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          marginTop: 16,
+          padding: 16,
+          borderRadius: radius.lg,
+          backgroundColor: "rgba(124,92,255,0.10)",
+          borderWidth: 1,
+          borderColor: colors.borderPurple,
+        }}
+      >
+        <Sparkles color={colors.purple} size={22} />
+        <View style={{ flex: 1 }}>
+          <KairosText variant="body" style={{ fontWeight: "900" }}>
+            Gerar plano com a Kairos AI
+          </KairosText>
+          <KairosText variant="subtitle" style={{ marginTop: 2 }}>
+            Divisão semanal personalizada em segundos.
+          </KairosText>
+        </View>
+        <ChevronRight color={colors.purple} size={20} />
+      </Pressable>
+
       {!selectedWorkout ? (
         <KairosCard style={{ marginTop: 20 }}>
           <KairosText variant="body" style={{ fontWeight: "900" }}>
             Dia de descanso.
           </KairosText>
           <KairosText variant="subtitle" style={{ marginTop: 6 }}>
-            Nenhum treino planejado para {WEEKDAY_LABELS[selectedWeekday]}. Recuperação
-            também constrói resultado.
+            Nenhum treino planejado para {WEEKDAY_LABELS[selectedWeekday]}. Recuperação também
+            constrói resultado.
           </KairosText>
         </KairosCard>
       ) : (
@@ -171,19 +197,12 @@ export default function TrainingScreen() {
                   }}
                 >
                   <CheckCircle2 color={colors.success} size={20} />
-                  <KairosText
-                    variant="body"
-                    color={colors.success}
-                    style={{ fontWeight: "900" }}
-                  >
+                  <KairosText variant="body" color={colors.success} style={{ fontWeight: "900" }}>
                     Treino concluído
                   </KairosText>
                 </View>
               ) : (
-                <KairosButton
-                  style={{ marginTop: 22 }}
-                  onPress={() => router.push("/workout/log")}
-                >
+                <KairosButton style={{ marginTop: 22 }} onPress={() => router.push("/workout/log")}>
                   Iniciar treino
                 </KairosButton>
               )
@@ -203,17 +222,13 @@ export default function TrainingScreen() {
                       {exercise.name}
                     </KairosText>
                     <KairosText variant="subtitle" style={{ marginTop: 4 }}>
-                      {exercise.muscleGroup} • {exercise.targetSets} séries •{" "}
-                      {exercise.targetReps} reps • {exercise.restSeconds}s
+                      {exercise.muscleGroup} • {exercise.targetSets} séries • {exercise.targetReps}{" "}
+                      reps • {exercise.restSeconds}s
                     </KairosText>
                   </View>
 
                   {exercise.targetWeightKg ? (
-                    <KairosText
-                      variant="body"
-                      color={colors.gold}
-                      style={{ fontWeight: "900" }}
-                    >
+                    <KairosText variant="body" color={colors.gold} style={{ fontWeight: "900" }}>
                       {exercise.targetWeightKg} kg
                     </KairosText>
                   ) : null}
@@ -238,9 +253,7 @@ export default function TrainingScreen() {
             </KairosText>
           </View>
           <View style={{ flex: 1 }}>
-            <KairosText variant="metric">
-              {(summary.totalVolumeKg / 1000).toFixed(1)}t
-            </KairosText>
+            <KairosText variant="metric">{(summary.totalVolumeKg / 1000).toFixed(1)}t</KairosText>
             <KairosText variant="subtitle" style={{ marginTop: 2 }}>
               volume
             </KairosText>

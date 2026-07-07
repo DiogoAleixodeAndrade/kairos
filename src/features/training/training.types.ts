@@ -58,3 +58,37 @@ export type WeeklyTrainingSummary = {
   totalCalories: number;
   completedSets: number;
 };
+
+// ===== Geração de treino com IA =====
+
+export type GeneratedExercise = {
+  name: string;
+  muscleGroup: string;
+  targetSets: number;
+  targetReps: string;
+  restSeconds: number;
+};
+
+export type GeneratedWorkout = {
+  id: string;
+  title: string;
+  subtitle: string;
+  durationMinutes: number;
+  estimatedCalories: number;
+  exercises: GeneratedExercise[];
+};
+
+export type GeneratedTrainingPlan = {
+  workouts: GeneratedWorkout[];
+  weeklyPlan: WeeklyPlan; // length 7, workoutId | null
+};
+
+export type GenerateTrainingPlanInput = {
+  displayName: string;
+  objective: string; // cut | maintain | gain
+  level: string; // iniciante | intermediario | avancado
+  weightKg: number;
+  daysPerWeek: number;
+  sessionMinutes: number;
+  restrictions: string;
+};

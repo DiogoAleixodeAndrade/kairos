@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   Exercise,
+  GeneratedTrainingPlan,
   WeeklyPlan,
   Workout,
   WorkoutSession,
@@ -23,6 +24,7 @@ type TrainingState = {
 
   // plano semanal
   setPlanForWeekday: (weekday: number, workoutId: string | null) => void;
+  applyGeneratedPlan: (plan: GeneratedTrainingPlan) => void;
 
   // edição de exercícios do treino
   addExercise: (workoutId: string, exercise: Omit<Exercise, "id">) => void;
@@ -263,9 +265,7 @@ export const useTrainingStore = create<TrainingState>()(
 
       getRecentSessions: (limit = 30) => {
         return [...get().sessions]
-          .sort(
-            (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-          )
+          .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
           .slice(0, limit);
       },
 
@@ -281,16 +281,45 @@ export const useTrainingStore = create<TrainingState>()(
           return { weeklyPlan: nextPlan };
         }),
 
+      applyGeneratedPlan: (plan) => {
+        const scheduledFor = new Date().toISOString();
+
+        const workouts: Workout[] = plan.workouts.map((workout) => ({
+          id: workout.id,
+          title: workout.title,
+          subtitle: workout.subtitle,
+          scheduledFor,
+          durationMinutes: workout.durationMinutes,
+          estimatedCalories: workout.estimatedCalories,
+          status: "planned",
+          exercises: workout.exercises.map((exercise) => ({
+            id: createId(),
+            name: exercise.name,
+            muscleGroup: exercise.muscleGroup,
+            targetSets: exercise.targetSets,
+            targetReps: exercise.targetReps,
+            restSeconds: exercise.restSeconds,
+          })),
+        }));
+
+        const validIds = new Set(workouts.map((workout) => workout.id));
+
+        // garante 7 posições e só mantém ids válidos
+        const weeklyPlan: WeeklyPlan = Array.from({ length: 7 }).map((_, index) => {
+          const id = plan.weeklyPlan[index] ?? null;
+          return id && validIds.has(id) ? id : null;
+        });
+
+        set({ workouts, weeklyPlan });
+      },
+
       addExercise: (workoutId, exercise) =>
         set((state) => ({
           workouts: state.workouts.map((workout) =>
             workout.id === workoutId
               ? {
                   ...workout,
-                  exercises: [
-                    ...workout.exercises,
-                    { ...exercise, id: createId() },
-                  ],
+                  exercises: [...workout.exercises, { ...exercise, id: createId() }],
                 }
               : workout
           ),
@@ -303,9 +332,7 @@ export const useTrainingStore = create<TrainingState>()(
               ? {
                   ...workout,
                   exercises: workout.exercises.map((exercise) =>
-                    exercise.id === exerciseId
-                      ? { ...exercise, ...patch }
-                      : exercise
+                    exercise.id === exerciseId ? { ...exercise, ...patch } : exercise
                   ),
                 }
               : workout
@@ -318,9 +345,7 @@ export const useTrainingStore = create<TrainingState>()(
             workout.id === workoutId
               ? {
                   ...workout,
-                  exercises: workout.exercises.filter(
-                    (exercise) => exercise.id !== exerciseId
-                  ),
+                  exercises: workout.exercises.filter((exercise) => exercise.id !== exerciseId),
                 }
               : workout
           ),
@@ -345,18 +370,14 @@ export const useTrainingStore = create<TrainingState>()(
       completeTodayWorkout: () =>
         set((state) => ({
           workouts: state.workouts.map((workout) =>
-            isToday(workout.scheduledFor)
-              ? { ...workout, status: "completed" }
-              : workout
+            isToday(workout.scheduledFor) ? { ...workout, status: "completed" } : workout
           ),
         })),
 
       skipTodayWorkout: () =>
         set((state) => ({
           workouts: state.workouts.map((workout) =>
-            isToday(workout.scheduledFor)
-              ? { ...workout, status: "skipped" }
-              : workout
+            isToday(workout.scheduledFor) ? { ...workout, status: "skipped" } : workout
           ),
         })),
     }),

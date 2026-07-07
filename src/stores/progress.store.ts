@@ -25,6 +25,7 @@ type ProgressState = {
   addWeightLog: (data: Omit<WeightLog, "id" | "loggedAt">) => void;
   addMeasurement: (data: Omit<BodyMeasurement, "id" | "measuredAt">) => void;
   addPhoto: (data: { uri: string; type: ProgressPhotoType; notes?: string }) => void;
+  setTargetWeight: (targetWeightKg: number) => void;
 
   getCurrentWeight: () => number;
   getLatestMeasurement: () => BodyMeasurement | null;
@@ -129,6 +130,8 @@ export const useProgressStore = create<ProgressState>()(
             ...state.photos,
           ],
         })),
+
+      setTargetWeight: (targetWeightKg) => set({ targetWeightKg: Math.max(0, targetWeightKg) }),
 
       getCurrentWeight: () => {
         const latestWeight = get().weightLogs[0];

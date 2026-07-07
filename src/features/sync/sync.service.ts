@@ -1,5 +1,8 @@
 import type { AppSyncSnapshotRow, KairosSyncPayload } from "@/features/sync/sync.types";
-import { pushFlatTablesToSupabase } from "@/features/sync/table-sync.service";
+import {
+  pushFlatTablesToSupabase,
+  pushNestedTablesToSupabase,
+} from "@/features/sync/table-sync.service";
 import { supabase } from "@/lib/supabase";
 import { useAIStore } from "@/stores/ai.store";
 import { useGamificationStore } from "@/stores/gamification.store";

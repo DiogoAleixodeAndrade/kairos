@@ -3,6 +3,7 @@ import { useAIStore } from "@/stores/ai.store";
 import { useNutritionStore } from "@/stores/nutrition.store";
 import { useProgressStore } from "@/stores/progress.store";
 import { useSleepStore } from "@/stores/sleep.store";
+import { useTrainingStore } from "@/stores/training.store";
 
 /**
  * Sincronização por tabela real (Etapa 32).
@@ -155,4 +156,194 @@ export async function pushFlatTablesToSupabase(userId: string) {
       raw_payload: report,
     }))
   );
+}
+
+/* =========================================================================
+ * Fatia 2 — tabelas aninhadas (pais + filhos com FK)
+ *
+ *   meals            + meal_items
+ *   ai_conversations + ai_messages
+ *   workouts         + workout_exercises + workout_logs (a partir das sessões)
+ *
+ * Cada domínio é isolado: se um falhar, os outros continuam. Continua sendo
+ * best-effort — o snapshot JSON segue como fonte de verdade do restore.
+ * ========================================================================= */
+
+async function insertReturningId(table: string, row: any): Promise<string> {
+  const { data, error } = await supabase
+    .from(table)
+    .insert(row)
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(`Erro ao gravar ${table}: ${error.message}`);
+  }
+
+  return (data as { id: string }).id;
+}
+
+async function pushMeals(userId: string) {
+  const nutrition = useNutritionStore.getState();
+
+  // apaga refeições (cascade remove meal_items)
+  const { error: deleteError } = await supabase
+    .from("meals")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    throw new Error(`Erro ao limpar meals: ${deleteError.message}`);
+  }
+
+  for (const meal of nutrition.meals) {
+    const mealId = await insertReturningId("meals", {
+      user_id: userId,
+      meal_type: meal.mealType,
+      title: meal.title,
+      eaten_at: meal.eatenAt,
+      notes: meal.notes ?? null,
+    });
+
+    if (meal.items.length === 0) continue;
+
+    const items = meal.items.map((item) => ({
+      user_id: userId,
+      meal_id: mealId,
+      food_name: item.foodName,
+      quantity_g: item.quantityG,
+      calories_kcal: item.caloriesKcal,
+      protein_g: item.proteinG,
+      carbs_g: item.carbsG,
+      fat_g: item.fatG,
+    }));
+
+    const { error: itemsError } = await supabase.from("meal_items").insert(items);
+
+    if (itemsError) {
+      throw new Error(`Erro ao gravar meal_items: ${itemsError.message}`);
+    }
+  }
+}
+
+async function pushAIMessages(userId: string) {
+  const ai = useAIStore.getState();
+
+  // apaga conversas (cascade remove ai_messages)
+  const { error: deleteError } = await supabase
+    .from("ai_conversations")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    throw new Error(`Erro ao limpar ai_conversations: ${deleteError.message}`);
+  }
+
+  if (ai.messages.length === 0) return;
+
+  // uma conversa guarda-chuva para as mensagens locais (que são uma lista plana)
+  const conversationId = await insertReturningId("ai_conversations", {
+    user_id: userId,
+    title: "Chat Kairos AI",
+  });
+
+  const messages = ai.messages.map((message) => ({
+    user_id: userId,
+    conversation_id: conversationId,
+    role: message.role,
+    content: message.content,
+    created_at: message.createdAt,
+  }));
+
+  const { error: messagesError } = await supabase.from("ai_messages").insert(messages);
+
+  if (messagesError) {
+    throw new Error(`Erro ao gravar ai_messages: ${messagesError.message}`);
+  }
+}
+
+async function pushWorkoutSessions(userId: string) {
+  const training = useTrainingStore.getState();
+
+  // apaga workouts (cascade remove workout_exercises e workout_logs)
+  const { error: deleteError } = await supabase
+    .from("workouts")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    throw new Error(`Erro ao limpar workouts: ${deleteError.message}`);
+  }
+
+  for (const session of training.sessions) {
+    const workoutId = await insertReturningId("workouts", {
+      user_id: userId,
+      title: session.title,
+      workout_type: "strength",
+      started_at: session.startedAt,
+      finished_at: session.finishedAt ?? null,
+      duration_minutes: session.durationMinutes ?? null,
+      estimated_calories_burned: session.estimatedCalories ?? null,
+      status: "completed",
+    });
+
+    // agrupa as séries por exercício, preservando a ordem de aparição
+    const order: string[] = [];
+    const byExercise = new Map<string, typeof session.setLogs>();
+
+    for (const setLog of session.setLogs) {
+      if (!byExercise.has(setLog.exerciseId)) {
+        byExercise.set(setLog.exerciseId, []);
+        order.push(setLog.exerciseId);
+      }
+      byExercise.get(setLog.exerciseId)!.push(setLog);
+    }
+
+    for (let index = 0; index < order.length; index += 1) {
+      const exerciseId = order[index];
+      const setLogs = byExercise.get(exerciseId)!;
+
+      const workoutExerciseId = await insertReturningId("workout_exercises", {
+        user_id: userId,
+        workout_id: workoutId,
+        exercise_name: setLogs[0].exerciseName,
+        order_index: index,
+        target_sets: setLogs.length,
+      });
+
+      const logs = setLogs.map((setLog: (typeof setLogs)[number]) => ({
+        user_id: userId,
+        workout_exercise_id: workoutExerciseId,
+        set_number: setLog.setNumber,
+        reps: setLog.reps,
+        weight_kg: setLog.weightKg,
+        completed: setLog.completed,
+      }));
+
+      const { error: logsError } = await supabase.from("workout_logs").insert(logs);
+
+      if (logsError) {
+        throw new Error(`Erro ao gravar workout_logs: ${logsError.message}`);
+      }
+    }
+  }
+}
+
+export async function pushNestedTablesToSupabase(userId: string) {
+  const domains: { name: string; run: () => Promise<void> }[] = [
+    { name: "meals", run: () => pushMeals(userId) },
+    { name: "ai_messages", run: () => pushAIMessages(userId) },
+    { name: "workout_sessions", run: () => pushWorkoutSessions(userId) },
+  ];
+
+  for (const domain of domains) {
+    try {
+      await domain.run();
+    } catch (error) {
+      console.warn(
+        `Sync da tabela ${domain.name} falhou:`,
+        error instanceof Error ? error.message : "Erro desconhecido"
+      );
+    }
+  }
 }

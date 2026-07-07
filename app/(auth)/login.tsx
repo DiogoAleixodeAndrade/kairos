@@ -5,12 +5,13 @@ import { KairosText } from "@/components/ui/KairosText";
 import { loginSchema, type LoginFormData } from "@/features/auth/auth.schema";
 import { signInWithEmail } from "@/features/auth/auth.service";
 import { colors } from "@/styles/theme";
+import { toast } from "@/stores/toast.store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useProfileStore } from "@/stores/profile.store";
 
 export default function LoginScreen() {
@@ -33,14 +34,21 @@ export default function LoginScreen() {
   async function onSubmit(data: LoginFormData) {
     try {
       setIsSubmitting(true);
+
       await signInWithEmail(data);
       setDemoMode(false);
       router.replace("/");
     } catch (error) {
-      Alert.alert(
-        "Erro ao entrar",
-        error instanceof Error ? error.message : "Confira seus dados e tente novamente."
-      );
+      const message =
+        error instanceof Error
+          ? error.message === "Email not confirmed"
+            ? "E-mail ainda não confirmado. Confirme seu e-mail para entrar."
+            : error.message === "Invalid login credentials"
+            ? "E-mail ou senha incorretos."
+            : error.message
+          : "Confira seus dados e tente novamente.";
+
+      toast.error(message, "Erro ao entrar");
     } finally {
       setIsSubmitting(false);
     }

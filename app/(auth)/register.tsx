@@ -5,12 +5,13 @@ import { KairosText } from "@/components/ui/KairosText";
 import { registerSchema, type RegisterFormData } from "@/features/auth/auth.schema";
 import { signUpWithEmail } from "@/features/auth/auth.service";
 import { colors } from "@/styles/theme";
+import { toast } from "@/stores/toast.store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useProfileStore } from "@/stores/profile.store";
 
 export default function RegisterScreen() {
@@ -37,12 +38,12 @@ export default function RegisterScreen() {
       await signUpWithEmail(data);
       setDemoMode(false);
 
-      Alert.alert("Conta criada", "Sua conta foi criada. Agora faça login para continuar.");
+      toast.success("Conta criada. Agora faça login para continuar.", "Tudo certo");
       router.replace("/(auth)/login");
     } catch (error) {
-      Alert.alert(
-        "Erro ao criar conta",
-        error instanceof Error ? error.message : "Tente novamente."
+      toast.error(
+        error instanceof Error ? error.message : "Tente novamente.",
+        "Erro ao criar conta"
       );
     } finally {
       setIsSubmitting(false);
